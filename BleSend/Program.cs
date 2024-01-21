@@ -39,12 +39,9 @@ namespace BleSend
 
 			}
 
-			var s = await device.GetGattServicesAsync(BluetoothCacheMode.Uncached);
-			using var svc = s.Services.First(x => x.Uuid == _serviceId);
+			using var svc = device.GetGattService(_serviceId);
 			svc.Session.MaintainConnection = true;
-			var characteristics = (await svc.GetCharacteristicsForUuidAsync(_charId));
-
-			var ch = characteristics.Characteristics.Single();
+			var ch = svc.GetCharacteristics(_charId).Single();
 			ch.ProtectionLevel = GattProtectionLevel.EncryptionAndAuthenticationRequired;
 
 			// Read
