@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "BleSend (pair)": {
+      "commandName": "Project",
+      "commandLineArgs": "pair DC:A6:32:60:C9:56 -f"
+    },
+    "BleSend (unpair)": {
+      "commandName": "Project",
+      "commandLineArgs": "unpair DC:A6:32:60:C9:56"
+    },
+    "BleSend (read)": {
+      "commandName": "Project",
+      "commandLineArgs": "read DC:A6:32:60:C9:56 -p -u -s 0000ffef-0000-1000-8000-00805f9b34fb -c a1ff12bb-3ed8-46e5-b4f9-d64e2fec021b"
+    },
+    "BleSend (write)": {
+      "commandName": "Project",
+      "commandLineArgs": "write DC:A6:32:60:C9:56 Alt-Tab -p -s 0000ffef-0000-1000-8000-00805f9b34fb -c a1ff12bb-3ed8-46e5-b4f9-d64e2fec021b"
+    }
+  }
+}
