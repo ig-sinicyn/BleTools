@@ -29,49 +29,57 @@ internal partial class PairCommands
 
 		var device = await GetDeviceAsync(bluetoothAddress);
 
-		//// Trigger pairing
-
-		var deviceName = device.Name;
-		var pairing = device.DeviceInformation.Pairing;
-		if (pairing.IsPaired)
+		try
 		{
-			if (force)
-			{
-				await UnpairCoreAsync(pairing, deviceName);
-				device = await GetDeviceAsync(bluetoothAddress);
-				deviceName = device.Name;
-				pairing = device.DeviceInformation.Pairing;
+			//// Trigger pairing
 
-			}
-			else
+			var deviceName = device.Name;
+			var pairing = device.DeviceInformation.Pairing;
+			if (pairing.IsPaired)
 			{
-				LogAlreadyPaired(deviceName);
-				return;
+				if (force)
+				{
+					await UnpairCoreAsync(pairing, deviceName);
+					device.Dispose();
+					device = await GetDeviceAsync(bluetoothAddress);
+					deviceName = device.Name;
+					pairing = device.DeviceInformation.Pairing;
+
+				}
+				else
+				{
+					LogAlreadyPaired(deviceName);
+					return;
+				}
 			}
+
+			LogBeginPairing(deviceName);
+
+			var customPairing = pairing.Custom;
+			var ceremoniesSelected = DevicePairingKinds.ProvidePin
+				| DevicePairingKinds.ConfirmOnly
+				| DevicePairingKinds.ConfirmPinMatch
+				| DevicePairingKinds.DisplayPin;
+			var protectionLevel = DevicePairingProtectionLevel.EncryptionAndAuthentication;
+			customPairing.PairingRequested += PairingRequestedHandler;
+			var pairResult = await customPairing.PairAsync(
+				ceremoniesSelected,
+				protectionLevel);
+
+			//// Handle pairing status
+
+			if (pairResult.Status != DevicePairingResultStatus.Paired)
+			{
+				LogPairingFailed(deviceName, pairResult.Status, pairResult.ProtectionLevelUsed);
+				throw new CommandExitedException(WellKnownResultCodes.DevicePairingFailed);
+			}
+
+			LogPaired(deviceName, pairResult.ProtectionLevelUsed);
 		}
-
-		LogBeginPairing(deviceName);
-
-		var customPairing = pairing.Custom;
-		var ceremoniesSelected = DevicePairingKinds.ProvidePin
-			| DevicePairingKinds.ConfirmOnly
-			| DevicePairingKinds.ConfirmPinMatch
-			| DevicePairingKinds.DisplayPin;
-		var protectionLevel = DevicePairingProtectionLevel.EncryptionAndAuthentication;
-		customPairing.PairingRequested += PairingRequestedHandler;
-		var pairResult = await customPairing.PairAsync(
-			ceremoniesSelected,
-			protectionLevel);
-
-		//// Handle pairing status
-
-		if (pairResult.Status != DevicePairingResultStatus.Paired)
+		finally
 		{
-			LogPairingFailed(deviceName, pairResult.Status, pairResult.ProtectionLevelUsed);
-			throw new CommandExitedException(WellKnownResultCodes.DevicePairingFailed);
+			device.Dispose();
 		}
-
-		LogPaired(deviceName, pairResult.ProtectionLevelUsed);
 	}
 
 	[Command("unpair", Description = "Breaks pairing for specified device")]

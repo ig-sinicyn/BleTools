@@ -29,7 +29,7 @@ internal partial class CharacteristicCommands
 	{
 		//// Find device
 
-		var device = await GetDeviceAsync(bluetoothAddress);
+		using var device = await GetDeviceAsync(bluetoothAddress);
 
 		//// Check pairing
 
@@ -39,7 +39,7 @@ internal partial class CharacteristicCommands
 
 		using var service = GetGattService(device, serviceId);
 		service.Session.MaintainConnection = true;
-		var characteristic = GetGattCharacteristic(service, characteristicId, requireAuthorization: requirePairing);
+		var characteristic = await GetGattCharacteristicAsync(service, characteristicId, requireAuthorization: requirePairing);
 
 		//// Read value
 
@@ -65,7 +65,7 @@ internal partial class CharacteristicCommands
 	{
 		//// Find device
 
-		var device = await GetDeviceAsync(bluetoothAddress);
+		using var device = await GetDeviceAsync(bluetoothAddress);
 
 		//// Check pairing
 
@@ -75,7 +75,7 @@ internal partial class CharacteristicCommands
 
 		using var service = GetGattService(device, serviceId);
 		service.Session.MaintainConnection = true;
-		var characteristic = GetGattCharacteristic(service, characteristicId, requireAuthorization: requirePairing);
+		var characteristic = await GetGattCharacteristicAsync(service, characteristicId, requireAuthorization: requirePairing);
 
 		//// Write value
 
@@ -141,13 +141,13 @@ internal partial class CharacteristicCommands
 		return service;
 	}
 
-	private GattCharacteristic GetGattCharacteristic(
+	private async Task<GattCharacteristic> GetGattCharacteristicAsync(
 		GattDeviceService service,
 		Guid characteristicId,
 		bool requireAuthorization)
 	{
 		LogGetCharacteristic(service.Uuid, characteristicId);
-		var characteristic = service.GetCharacteristics(characteristicId).SingleOrDefault();
+		var characteristic = (await service.GetCharacteristicsForUuidAsync(characteristicId)).Characteristics.SingleOrDefault();
 		if (characteristic == null)
 		{
 			LogCharacteristicNotFound(service.Uuid, characteristicId);
