@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BleTools.Write": {
+      "commandName": "Project",
+      "commandLineArgs": "DC:A6:32:60:C9:56 00000000-f813-4ae9-9174-6efbee940ae2 00000003-f813-4ae9-9174-6efbee940ae2 Alt-Tab"
+    }
+  }
+}
