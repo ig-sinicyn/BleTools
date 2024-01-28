@@ -1,19 +1,18 @@
-﻿using Windows.Devices.Bluetooth;
-using Windows.Devices.Bluetooth.GenericAttributeProfile;
-using BleSend.Infrastructure;
-using System.Diagnostics;
+﻿using BleSend.Infrastructure;
+
 using System.Runtime.InteropServices;
-using Windows.Devices.Sms;
+
+using Windows.Devices.Bluetooth;
+using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
-using System.Collections.Concurrent;
-using System;
 
 namespace BleSend;
 
 public static class SimpleTest
 {
 	private const string deviceMac = "DC:A6:32:60:C9:56";
-	private static readonly Guid _serviceId = new Guid("00000000-f813-4ae9-9174-6efbee940ae2");
+	private static readonly Guid _serviceId = new Guid("00000000-6907-4437-8539-9218a9d54e29");
+	private static readonly Guid _characteristic = new Guid("00000001-6907-4437-8539-9218a9d54e29");
 	private static readonly Guid _characteristicUnsafe = new Guid("00000001-f813-4ae9-9174-6efbee940ae2");
 	private static readonly Guid _characteristicSignedRequired = new Guid("00000002-f813-4ae9-9174-6efbee940ae2");
 	private static readonly Guid _characteristicFullRequired = new Guid("00000003-f813-4ae9-9174-6efbee940ae2");
@@ -71,13 +70,15 @@ public static class SimpleTest
 		Console.WriteLine($"Get {service.Uuid} service");
 		service.Session.MaintainConnection = true;
 
-		await ReadCharacteristicValueAsync(service, _characteristicUnsafe);
-		await ReadCharacteristicValueAsync(service, _characteristicSignedRequired);
-		await ReadCharacteristicValueAsync(service, _characteristicFullRequired);
+		await ReadCharacteristicValueAsync(service, _characteristic);
+		//await ReadCharacteristicValueAsync(service, _characteristicUnsafe);
+		//await ReadCharacteristicValueAsync(service, _characteristicSignedRequired);
+		//await ReadCharacteristicValueAsync(service, _characteristicFullRequired);
 
-		await WriteCharacteristicValueAsync(service, _characteristicUnsafe);
-		await WriteCharacteristicValueAsync(service, _characteristicSignedRequired);
-		await WriteCharacteristicValueAsync(service, _characteristicFullRequired);
+		await WriteCharacteristicValueAsync(service, _characteristic);
+		//await WriteCharacteristicValueAsync(service, _characteristicUnsafe);
+		//await WriteCharacteristicValueAsync(service, _characteristicSignedRequired);
+		//await WriteCharacteristicValueAsync(service, _characteristicFullRequired);
 
 		service.Session.MaintainConnection = false;
 		service.Dispose();
@@ -110,13 +111,17 @@ public static class SimpleTest
 				}
 			}
 
-			if (service == null && tryCount > 5) //make this larger if failed
+			if (service == null)
 			{
-				Console.WriteLine("Failed to connect to service");
-				throw new InvalidComObjectException("Failed to connect to service");
+				if (tryCount > 5) //make this larger if failed
+				{
+					Console.WriteLine("Failed to connect to service");
+					throw new InvalidOperationException("Failed to connect to service");
+				}
+
+				await Task.Delay(TimeSpan.FromMicroseconds(100));
 			}
 
-			await Task.Delay(TimeSpan.FromMicroseconds(100));
 		}
 
 		return service;
@@ -130,20 +135,23 @@ public static class SimpleTest
 		while (characteristic == null) //This is to make sure all characteristics are found.
 		{
 			tryCount++;
-			var characteristics = await service.GetCharacteristicsAsync();
+			var characteristics = await service.GetCharacteristicsForUuidAsync(characteristicId, BluetoothCacheMode.Uncached);
 			if (characteristics.Status == GattCommunicationStatus.Success
 				&& characteristics.Characteristics.FirstOrDefault(x => x.Uuid == characteristicId) is { } found)
 			{
 				characteristic = found;
 				Console.WriteLine("Characteristic connected in " + tryCount + " tries");
 			}
-			else if (tryCount > 5) //make this larger if failed
+			else
 			{
-				Console.WriteLine("Failed to connect to characteristic");
-				throw new InvalidComObjectException("Failed to connect to characteristic");
-			}
+				if (tryCount > 5) //make this larger if failed
+				{
+					Console.WriteLine("Failed to connect to characteristic");
+					throw new InvalidOperationException("Failed to connect to characteristic");
+				}
 
-			await Task.Delay(TimeSpan.FromMicroseconds(100));
+				await Task.Delay(TimeSpan.FromMicroseconds(100));
+			}
 		}
 
 		return characteristic;

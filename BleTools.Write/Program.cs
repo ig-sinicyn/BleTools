@@ -33,6 +33,8 @@ namespace BleTools.Write
 			return writer.DetachBuffer();
 		}
 
+		private static Task
+
 		static async Task<int> Main(string[] args)
 		{
 			if (args.Length != 4)
