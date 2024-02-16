@@ -33,8 +33,6 @@ namespace BleTools.Write
 			return writer.DetachBuffer();
 		}
 
-		private static Task
-
 		static async Task<int> Main(string[] args)
 		{
 			if (args.Length != 4)
@@ -50,7 +48,7 @@ namespace BleTools.Write
 
 			using var device = await BluetoothLEDevice.FromBluetoothAddressAsync(address);
 
-			using var service = device.GattServices.Single(x => x.Uuid == serviceId);
+			using var service = device.GetGattService(serviceId);
 			service.Session.MaintainConnection = true;
 			var characteristic = service.GetCharacteristics(characteristicId).Single();
 

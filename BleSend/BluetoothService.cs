@@ -45,11 +45,6 @@ public partial class BluetoothService
 			return device;
 		}
 
-
-
-
-
-
 		throw new CommandExitedException(WellKnownResultCodes.DeviceNotFound);
 	}
 

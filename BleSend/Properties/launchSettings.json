@@ -2,19 +2,19 @@
   "profiles": {
     "BleSend (pair)": {
       "commandName": "Project",
-      "commandLineArgs": "pair DC:A6:32:60:C9:56 -f"
+      "commandLineArgs": "pair B8:27:EB:9C:F6:4C -f"
     },
     "BleSend (unpair)": {
       "commandName": "Project",
-      "commandLineArgs": "unpair DC:A6:32:60:C9:56"
+      "commandLineArgs": "unpair B8:27:EB:9C:F6:4C"
     },
     "BleSend (read)": {
       "commandName": "Project",
-      "commandLineArgs": "read DC:A6:32:60:C9:56 -p -s 00000000-f813-4ae9-9174-6efbee940ae2 -c 00000003-f813-4ae9-9174-6efbee940ae2"
+      "commandLineArgs": "read B8:27:EB:9C:F6:4C -p -s 00000000-f813-4ae9-9174-6efbee940ae2 -c 00000003-f813-4ae9-9174-6efbee940ae2"
     },
     "BleSend (write)": {
       "commandName": "Project",
-      "commandLineArgs": "write DC:A6:32:60:C9:56 Alt-Tab -p -s 00000000-f813-4ae9-9174-6efbee940ae2 -c 00000003-f813-4ae9-9174-6efbee940ae2"
+      "commandLineArgs": "write B8:27:EB:9C:F6:4C Alt-Tab -p -s 00000000-f813-4ae9-9174-6efbee940ae2 -c 00000003-f813-4ae9-9174-6efbee940ae2"
     }
   }
 }

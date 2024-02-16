@@ -1,21 +1,27 @@
-﻿using Cocona;
+﻿using BleSend.Infrastructure;
+
+using Cocona;
+
+using JetBrains.Annotations;
 
 using Microsoft.Extensions.Logging;
 
 using Windows.Devices.Bluetooth;
-using BleSend.Infrastructure;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
-using JetBrains.Annotations;
 
 namespace BleSend;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 internal partial class CharacteristicCommands
 {
+	private readonly BluetoothService _bluetoothService;
 	private readonly ILogger<CharacteristicCommands> _logger;
 
-	public CharacteristicCommands(ILogger<CharacteristicCommands> logger)
+	public CharacteristicCommands(
+		BluetoothService bluetoothService,
+		ILogger<CharacteristicCommands> logger)
 	{
+		_bluetoothService = bluetoothService;
 		_logger = logger;
 	}
 
@@ -29,7 +35,7 @@ internal partial class CharacteristicCommands
 	{
 		//// Find device
 
-		using var device = await GetDeviceAsync(bluetoothAddress);
+		using var device = await _bluetoothService.GetBluetoothDeviceAsync(bluetoothAddress);
 
 		//// Check pairing
 
@@ -65,7 +71,7 @@ internal partial class CharacteristicCommands
 	{
 		//// Find device
 
-		using var device = await GetDeviceAsync(bluetoothAddress);
+		using var device = await _bluetoothService.GetBluetoothDeviceAsync(bluetoothAddress);
 
 		//// Check pairing
 
@@ -88,30 +94,6 @@ internal partial class CharacteristicCommands
 		}
 
 		LogCharacteristicWritten(characteristicId, value);
-	}
-
-	private async Task<BluetoothLEDevice> GetDeviceAsync(string bluetoothAddress)
-	{
-		var parsedAddress = BluetoothAddress.Parse(bluetoothAddress);
-
-		LogBeginSearch(parsedAddress.ToString("X"));
-		var device = await BluetoothLEDevice.FromBluetoothAddressAsync(parsedAddress);
-		try
-		{
-			if (device == null)
-			{
-				LogNotFound(parsedAddress.ToString("X"));
-				throw new CommandExitedException(WellKnownResultCodes.DeviceNotFound);
-			}
-
-			LogCompleteSearch(device.DeviceId);
-			return device;
-		}
-		catch
-		{
-			device?.Dispose();
-			throw;
-		}
 	}
 
 	private void AssertPairing(BluetoothLEDevice device, bool required)
@@ -170,43 +152,34 @@ internal partial class CharacteristicCommands
 		return errorDescriptor;
 	}
 
-	[LoggerMessage(1, LogLevel.Debug, "Begin search for {deviceAddress}")]
-	private partial void LogBeginSearch(string deviceAddress);
-
-	[LoggerMessage(2, LogLevel.Error, "No device with address = {deviceAddress}")]
-	private partial void LogNotFound(string deviceAddress);
-
-	[LoggerMessage(3, LogLevel.Debug, "Found {deviceId}")]
-	private partial void LogCompleteSearch(string deviceId);
-
-	[LoggerMessage(4, LogLevel.Error, "Device {deviceName} is not paired. Please call pair command first")]
+	[LoggerMessage(1, LogLevel.Error, "Device {deviceName} is not paired. Please call pair command first")]
 	private partial void LogNotPaired(string deviceName);
 
-	[LoggerMessage(5, LogLevel.Debug, "Get service {serviceId} metadata for {deviceName}")]
+	[LoggerMessage(2, LogLevel.Debug, "Get service {serviceId} metadata for {deviceName}")]
 	private partial void LogGetService(string deviceName, Guid serviceId);
 
-	[LoggerMessage(6, LogLevel.Error, "Service {serviceId} not found for {deviceName}")]
+	[LoggerMessage(3, LogLevel.Error, "Service {serviceId} not found for {deviceName}")]
 	private partial void LogServiceNotFound(string deviceName, Guid serviceId);
 
-	[LoggerMessage(7, LogLevel.Debug, "Get characteristic {characteristicId} metadata for service {serviceId}")]
+	[LoggerMessage(4, LogLevel.Debug, "Get characteristic {characteristicId} metadata for service {serviceId}")]
 	private partial void LogGetCharacteristic(Guid serviceId, Guid characteristicId);
 
-	[LoggerMessage(8, LogLevel.Error, "Characteristic {characteristicId} not found for service {serviceId}")]
+	[LoggerMessage(5, LogLevel.Error, "Characteristic {characteristicId} not found for service {serviceId}")]
 	private partial void LogCharacteristicNotFound(Guid serviceId, Guid characteristicId);
 
-	[LoggerMessage(9, LogLevel.Information, "{characteristicId} value is '{value}'")]
+	[LoggerMessage(6, LogLevel.Information, "{characteristicId} value is '{value}'")]
 	private partial void LogCharacteristicRead(Guid characteristicId, string value);
 
-	[LoggerMessage(10, LogLevel.Error, "Failed to read {characteristicId}: {status} ({protocolError})")]
+	[LoggerMessage(7, LogLevel.Error, "Failed to read {characteristicId}: {status} ({protocolError})")]
 	private partial void LogCharacteristicReadFailed(Guid characteristicId, GattCommunicationStatus status, string protocolError);
 
-	[LoggerMessage(11, LogLevel.Information, "{characteristicId} set to '{value}'")]
+	[LoggerMessage(8, LogLevel.Information, "{characteristicId} set to '{value}'")]
 	private partial void LogCharacteristicWritten(Guid characteristicId, string value);
 
-	[LoggerMessage(12, LogLevel.Information, "{characteristicId} set to '{value}'. Response: '{response}'")]
+	[LoggerMessage(9, LogLevel.Information, "{characteristicId} set to '{value}'. Response: '{response}'")]
 	private partial void LogCharacteristicWrittenWithResponse(Guid characteristicId, string value, string response);
 
-	[LoggerMessage(13, LogLevel.Error, "Failed to write {characteristicId}: {status} ({protocolError})")]
+	[LoggerMessage(10, LogLevel.Error, "Failed to write {characteristicId}: {status} ({protocolError})")]
 	private partial void LogCharacteristicWriteFailed(Guid characteristicId, GattCommunicationStatus status, string protocolError);
 
 }

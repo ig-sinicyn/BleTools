@@ -1,22 +1,24 @@
-﻿using BleSend.Infrastructure;
+﻿using Cocona;
 
-using Cocona;
+using JetBrains.Annotations;
 
 using Microsoft.Extensions.Logging;
 
-using Windows.Devices.Bluetooth;
 using Windows.Devices.Enumeration;
-using JetBrains.Annotations;
 
 namespace BleSend;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 internal partial class PairCommands
 {
+	private readonly BluetoothService _bluetoothService;
 	private readonly ILogger<PairCommands> _logger;
 
-	public PairCommands(ILogger<PairCommands> logger)
+	public PairCommands(
+		BluetoothService bluetoothService,
+		ILogger<PairCommands> logger)
 	{
+		_bluetoothService = bluetoothService;
 		_logger = logger;
 	}
 
@@ -27,7 +29,7 @@ internal partial class PairCommands
 	{
 		//// Find device
 
-		var device = await GetDeviceAsync(bluetoothAddress);
+		var device = await _bluetoothService.GetBluetoothDeviceAsync(bluetoothAddress);
 
 		try
 		{
@@ -41,7 +43,7 @@ internal partial class PairCommands
 				{
 					await UnpairCoreAsync(pairing, deviceName);
 					device.Dispose();
-					device = await GetDeviceAsync(bluetoothAddress);
+					device = await _bluetoothService.GetBluetoothDeviceAsync(bluetoothAddress);
 					deviceName = device.Name;
 					pairing = device.DeviceInformation.Pairing;
 
@@ -87,7 +89,7 @@ internal partial class PairCommands
 	{
 		//// Find device
 
-		using var device = await GetDeviceAsync(bluetoothAddress);
+		using var device = await _bluetoothService.GetBluetoothDeviceAsync(bluetoothAddress);
 
 		//// Trigger unpairing
 
@@ -118,70 +120,37 @@ internal partial class PairCommands
 		LogUnpaired(deviceName);
 	}
 
-	private async Task<BluetoothLEDevice> GetDeviceAsync(string bluetoothAddress)
-	{
-		var parsedAddress = BluetoothAddress.Parse(bluetoothAddress);
-
-		LogBeginSearch(parsedAddress.ToString("X"));
-		var device = await BluetoothLEDevice.FromBluetoothAddressAsync(parsedAddress);
-		try
-		{
-			if (device == null)
-			{
-				LogNotFound(parsedAddress.ToString("X"));
-				throw new CommandExitedException(WellKnownResultCodes.DeviceNotFound);
-			}
-
-			LogCompleteSearch(device.DeviceId);
-			return device;
-		}
-		catch
-		{
-			device?.Dispose();
-			throw;
-		}
-	}
-
 	private void PairingRequestedHandler(DeviceInformationCustomPairing sender, DevicePairingRequestedEventArgs args)
 	{
 		args.Accept(args.Pin);
 		LogAcceptPairing(args.DeviceInformation.Name, args.PairingKind);
 	}
 
-	[LoggerMessage(1, LogLevel.Debug, "Begin search for {deviceAddress}")]
-	private partial void LogBeginSearch(string deviceAddress);
-
-	[LoggerMessage(2, LogLevel.Error, "No device with address = {deviceAddress}")]
-	private partial void LogNotFound(string deviceAddress);
-
-	[LoggerMessage(3, LogLevel.Debug, "Found {deviceId}")]
-	private partial void LogCompleteSearch(string deviceId);
-
-	[LoggerMessage(4, LogLevel.Information, "Device {deviceName} already paired")]
+	[LoggerMessage(1, LogLevel.Information, "Device {deviceName} already paired")]
 	private partial void LogAlreadyPaired(string deviceName);
 
-	[LoggerMessage(5, LogLevel.Debug, "Begin pairing {deviceName}")]
+	[LoggerMessage(2, LogLevel.Debug, "Begin pairing {deviceName}")]
 	private partial void LogBeginPairing(string deviceName);
 
-	[LoggerMessage(6, LogLevel.Information, "Please confirm pairing on {deviceName}. Pairing accepted on this device ({pairingKind})")]
+	[LoggerMessage(3, LogLevel.Information, "Please confirm pairing on {deviceName}. Pairing accepted on this device ({pairingKind})")]
 	private partial void LogAcceptPairing(string deviceName, DevicePairingKinds pairingKind);
 
-	[LoggerMessage(7, LogLevel.Error, "Device {deviceName} pairing failed ({pairingStatus}). Result protection level: {protectionLevel}")]
+	[LoggerMessage(4, LogLevel.Error, "Device {deviceName} pairing failed ({pairingStatus}). Result protection level: {protectionLevel}")]
 	private partial void LogPairingFailed(string deviceName, DevicePairingResultStatus pairingStatus, DevicePairingProtectionLevel protectionLevel);
 
-	[LoggerMessage(8, LogLevel.Information, "Device {deviceName} pairing complete. Protection level: {protectionLevel}")]
+	[LoggerMessage(5, LogLevel.Information, "Device {deviceName} pairing complete. Protection level: {protectionLevel}")]
 	private partial void LogPaired(string deviceName, DevicePairingProtectionLevel protectionLevel);
 
-	[LoggerMessage(9, LogLevel.Information, "Device {deviceName} not paired")]
+	[LoggerMessage(6, LogLevel.Information, "Device {deviceName} not paired")]
 	private partial void LogAlreadyUnpaired(string deviceName);
 
-	[LoggerMessage(10, LogLevel.Debug, "Begin unpairing {deviceName}")]
+	[LoggerMessage(7, LogLevel.Debug, "Begin unpairing {deviceName}")]
 	private partial void LogBeginUnpairing(string deviceName);
 
-	[LoggerMessage(11, LogLevel.Error, "Device {deviceName} pairing failed ({pairingStatus})")]
+	[LoggerMessage(8, LogLevel.Error, "Device {deviceName} pairing failed ({pairingStatus})")]
 	private partial void LogUnpairingFailed(string deviceName, DeviceUnpairingResultStatus pairingStatus);
 
-	[LoggerMessage(12, LogLevel.Information, "Device {deviceName} unpair complete")]
+	[LoggerMessage(9, LogLevel.Information, "Device {deviceName} unpair complete")]
 	private partial void LogUnpaired(string deviceName);
 
 }

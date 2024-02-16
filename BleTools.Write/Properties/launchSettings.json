@@ -2,7 +2,7 @@
   "profiles": {
     "BleTools.Write": {
       "commandName": "Project",
-      "commandLineArgs": "DC:A6:32:60:C9:56 00000000-6907-4437-8539-9218a9d54e29 00000001-6907-4437-8539-9218a9d54e29 Win"
+      "commandLineArgs": "B8:27:EB:9C:F6:4C 00000000-6907-4437-8539-9218a9d54e29 00000001-6907-4437-8539-9218a9d54e29 Win"
     }
   }
 }
