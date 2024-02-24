@@ -1,4 +1,4 @@
-﻿namespace BleTools.Full;
+﻿namespace BleTools;
 
 public class BluetoothOptions
 {

@@ -1,8 +1,7 @@
 ﻿using System.Text;
-
 using Windows.Storage.Streams;
 
-namespace BleTools.Full.Infrastructure;
+namespace BleTools.Infrastructure;
 
 public static class CharacteristicValue
 {

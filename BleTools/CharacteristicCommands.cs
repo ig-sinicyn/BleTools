@@ -1,15 +1,11 @@
-﻿using BleTools.Full.Infrastructure;
-
+﻿using Windows.Devices.Bluetooth;
+using Windows.Devices.Bluetooth.GenericAttributeProfile;
+using BleTools.Infrastructure;
 using Cocona;
-
 using JetBrains.Annotations;
-
 using Microsoft.Extensions.Logging;
 
-using Windows.Devices.Bluetooth;
-using Windows.Devices.Bluetooth.GenericAttributeProfile;
-
-namespace BleTools.Full;
+namespace BleTools;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 internal partial class CharacteristicCommands
@@ -124,19 +120,88 @@ internal partial class CharacteristicCommands
 		return errorDescriptor;
 	}
 
-	[LoggerMessage(0, LogLevel.Error, "Device {deviceName} is not paired. Please call pair command first")]
+
+
+	[Command("list", Description = "Lists services and characteristic for specified device")]
+	public async Task ListAsync(
+		[Argument] string bluetoothAddress,
+		[Option("require-pairing", new[] { 'p' }, Description = "Require the device to be paired")] bool requirePairing = false,
+		[Option("uncached", new[] { 'u' }, Description = "Ignore cache")] bool uncached = false)
+	{
+		//// Find device
+
+		using var device = await _bluetoothService.GetBluetoothDeviceAsync(bluetoothAddress);
+
+		//// Check pairing
+
+		AssertPairing(device, requirePairing);
+
+		//// List metadata
+
+		var cacheMode = uncached ? BluetoothCacheMode.Uncached : BluetoothCacheMode.Cached;
+
+		var listResult = await device.GetGattServicesAsync(cacheMode);
+		if (listResult.Status != GattCommunicationStatus.Success)
+		{
+			LogListServicesFailed(device.Name, listResult.Status, GetGattErrorDescriptor(listResult.ProtocolError));
+			throw new CommandExitedException(WellKnownResultCodes.ListServicesFailed);
+		}
+
+		foreach (var service in listResult.Services)
+		{
+			try
+			{
+				LogServiceItem(service.Uuid);
+
+				await ListServiceCharacteristicsAsync(service, cacheMode);
+			}
+			finally
+			{
+				service.Dispose();
+			}
+		}
+
+	}
+
+	private async Task ListServiceCharacteristicsAsync(GattDeviceService service, BluetoothCacheMode cacheMode)
+	{
+		var listResult = await service.GetCharacteristicsAsync(cacheMode);
+		if (listResult.Status != GattCommunicationStatus.Success)
+		{
+			LogListCharacteristicsFailed(service.Uuid, listResult.Status, GetGattErrorDescriptor(listResult.ProtocolError));
+			return;
+		}
+
+		foreach (var characteristic in listResult.Characteristics)
+		{
+			LogCharacteristicItem(characteristic.Uuid, characteristic.CharacteristicProperties);
+		}
+	}
+
+	[LoggerMessage(0, LogLevel.Error, "Device {deviceName} is not paired. Please call pair command first.")]
 	private partial void LogNotPaired(string deviceName);
 
-	[LoggerMessage(1, LogLevel.Information, "{characteristicId} value is '{value}'")]
+	[LoggerMessage(1, LogLevel.Information, "{characteristicId} value is '{value}'.")]
 	private partial void LogCharacteristicRead(Guid characteristicId, string value);
 
-	[LoggerMessage(2, LogLevel.Error, "Failed to read {characteristicId}: {status} ({protocolError})")]
+	[LoggerMessage(2, LogLevel.Error, "Failed to read {characteristicId}: {status} ({protocolError}).")]
 	private partial void LogCharacteristicReadFailed(Guid characteristicId, GattCommunicationStatus status, string protocolError);
 
-	[LoggerMessage(3, LogLevel.Information, "{characteristicId} set to '{value}'")]
+	[LoggerMessage(3, LogLevel.Information, "{characteristicId} set to '{value}'.")]
 	private partial void LogCharacteristicWritten(Guid characteristicId, string value);
 
-	[LoggerMessage(4, LogLevel.Error, "Failed to write {characteristicId}: {status} ({protocolError})")]
+	[LoggerMessage(4, LogLevel.Error, "Failed to write {characteristicId}: {status} ({protocolError}).")]
 	private partial void LogCharacteristicWriteFailed(Guid characteristicId, GattCommunicationStatus status, string protocolError);
 
+	[LoggerMessage(5, LogLevel.Error, "Failed to list services for {deviceName}: {status} ({protocolError}).")]
+	private partial void LogListServicesFailed(string deviceName, GattCommunicationStatus status, string protocolError);
+
+	[LoggerMessage(6, LogLevel.Information, "* {serviceId}:")]
+	private partial void LogServiceItem(Guid serviceId);
+
+	[LoggerMessage(7, LogLevel.Error, "Failed to list characteristics for service {serviceId}: {status} ({protocolError}).")]
+	private partial void LogListCharacteristicsFailed(Guid serviceId, GattCommunicationStatus status, string protocolError);
+
+	[LoggerMessage(8, LogLevel.Information, "   - {characteristicId}: {properties};")]
+	private partial void LogCharacteristicItem(Guid characteristicId, GattCharacteristicProperties properties);
 }

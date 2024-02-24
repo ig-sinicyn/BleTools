@@ -1,0 +1,28 @@
+﻿namespace BleTools.Infrastructure.Backported;
+
+// BASED ON: https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Logging.Console/src/TextWriterExtensions.cs
+internal static class TextWriterExtensions
+{
+	public static void WriteColoredMessage(this TextWriter textWriter, string message, ConsoleColor? background, ConsoleColor? foreground)
+	{
+		// Order: backgroundcolor, foregroundcolor, Message, reset foregroundcolor, reset backgroundcolor
+		if (background.HasValue)
+		{
+			textWriter.Write((string?)AnsiParser.GetBackgroundColorEscapeCode(background.Value));
+		}
+		if (foreground.HasValue)
+		{
+			textWriter.Write((string?)AnsiParser.GetForegroundColorEscapeCode(foreground.Value));
+		}
+		textWriter.Write(message);
+		if (foreground.HasValue)
+		{
+			textWriter.Write((string?)AnsiParser.DefaultForegroundColor); // reset to default foreground color
+		}
+		if (background.HasValue)
+		{
+			textWriter.Write((string?)AnsiParser.DefaultBackgroundColor); // reset to the background color
+		}
+	}
+}
+

@@ -1,12 +1,9 @@
-﻿using Cocona;
-
+﻿using Windows.Devices.Enumeration;
+using Cocona;
 using JetBrains.Annotations;
-
 using Microsoft.Extensions.Logging;
 
-using Windows.Devices.Enumeration;
-
-namespace BleTools.Full;
+namespace BleTools;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 internal partial class PairCommands

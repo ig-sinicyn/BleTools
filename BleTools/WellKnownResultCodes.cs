@@ -1,4 +1,4 @@
-﻿namespace BleTools.Full;
+﻿namespace BleTools;
 
 public static class WellKnownResultCodes
 {
@@ -12,5 +12,6 @@ public static class WellKnownResultCodes
 	public const int CharacteristicNotFound = 7;
 	public const int CharacteristicReadFailed = 8;
 	public const int CharacteristicWriteFailed = 9;
+	public const int ListServicesFailed = 10;
 
 }

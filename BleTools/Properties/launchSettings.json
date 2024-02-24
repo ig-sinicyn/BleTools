@@ -1,18 +1,22 @@
 {
   "profiles": {
-    "BleSend (pair)": {
+    "BleTools (pair)": {
       "commandName": "Project",
       "commandLineArgs": "pair B8:27:EB:9C:F6:4C -f"
     },
-    "BleSend (unpair)": {
+    "BleTools (unpair)": {
       "commandName": "Project",
       "commandLineArgs": "unpair B8:27:EB:9C:F6:4C"
     },
-    "BleSend (read)": {
+    "BleTools (list)": {
+      "commandName": "Project",
+      "commandLineArgs": "list B8:27:EB:9C:F6:4C"
+    },
+    "BleTools (read)": {
       "commandName": "Project",
       "commandLineArgs": "read B8:27:EB:9C:F6:4C -p -s 00000000-6907-4437-8539-9218a9d54e29 -c 00000001-6907-4437-8539-9218a9d54e29"
     },
-    "BleSend (write)": {
+    "BleTools (write)": {
       "commandName": "Project",
       "commandLineArgs": "write B8:27:EB:9C:F6:4C Alt-Tab -p -s 00000000-6907-4437-8539-9218a9d54e29 -c 00000001-6907-4437-8539-9218a9d54e29"
     }

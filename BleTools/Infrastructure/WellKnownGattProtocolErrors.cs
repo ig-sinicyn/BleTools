@@ -1,8 +1,7 @@
 ﻿using System.Reflection;
-
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 
-namespace BleTools.Full.Infrastructure;
+namespace BleTools.Infrastructure;
 
 public static class WellKnownGattProtocolErrors
 {

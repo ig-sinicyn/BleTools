@@ -1,20 +1,15 @@
-﻿using BleTools.Full.Infrastructure;
-
-using Cocona;
-
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
-
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
-
+using BleTools.Infrastructure;
+using Cocona;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using DeviceInformation = Windows.Devices.Enumeration.DeviceInformation;
 
-namespace BleTools.Full;
+namespace BleTools;
 
 public partial class BluetoothService
 {
@@ -136,10 +131,10 @@ public partial class BluetoothService
 		var sw = Stopwatch.StartNew();
 		while (sw.Elapsed < _options.MetadataRetrieveTimeout)
 		{
-			var candidates = await device.GetGattServicesAsync(cacheMode);
-			if (candidates.Status == GattCommunicationStatus.Success)
+			var listResult = await device.GetGattServicesAsync(cacheMode);
+			if (listResult.Status == GattCommunicationStatus.Success)
 			{
-				foreach (var candidateService in candidates.Services)
+				foreach (var candidateService in listResult.Services)
 				{
 					if (candidateService.Uuid == serviceId)
 					{
@@ -186,9 +181,9 @@ public partial class BluetoothService
 		var sw = Stopwatch.StartNew();
 		while (sw.Elapsed < _options.MetadataRetrieveTimeout)
 		{
-			var candidates = await service.GetCharacteristicsForUuidAsync(characteristicId, cacheMode);
-			if (candidates.Status == GattCommunicationStatus.Success
-				&& candidates.Characteristics.FirstOrDefault(x => x.Uuid == characteristicId) is { } found)
+			var listResult = await service.GetCharacteristicsForUuidAsync(characteristicId, cacheMode);
+			if (listResult.Status == GattCommunicationStatus.Success
+				&& listResult.Characteristics.FirstOrDefault(x => x.Uuid == characteristicId) is { } found)
 			{
 				characteristic = found;
 				LogCharacteristicFound(characteristicId);
