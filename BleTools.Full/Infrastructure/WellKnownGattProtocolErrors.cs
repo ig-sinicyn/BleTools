@@ -2,7 +2,7 @@
 
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 
-namespace BleSend.Infrastructure;
+namespace BleTools.Full.Infrastructure;
 
 public static class WellKnownGattProtocolErrors
 {

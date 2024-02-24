@@ -3,21 +3,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace BleSend
+namespace BleTools.Full
 {
 	internal class Program
 	{
 		public static async Task Main(string[] args)
 		{
-			//var deviceId = await SimpleTest.DiscoverDeviceIdAsync();
-			//await SimpleTest.PairAsync(deviceId);
-			//await SimpleTest.TestServiceAsync(deviceId);
-
-			//GC.Collect();
-			//GC.WaitForPendingFinalizers();
-			//GC.Collect();
-			//return;
-
 			var builder = CoconaApp.CreateBuilder(args);
 			builder.Logging.AddDebug();
 			builder.Services.AddOptions<BluetoothOptions>();

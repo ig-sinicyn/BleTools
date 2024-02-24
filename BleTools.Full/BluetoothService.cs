@@ -1,9 +1,12 @@
-﻿using BleSend.Infrastructure;
+﻿using BleTools.Full.Infrastructure;
 
 using Cocona;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
@@ -11,12 +14,10 @@ using Windows.Devices.Enumeration;
 
 using DeviceInformation = Windows.Devices.Enumeration.DeviceInformation;
 
-namespace BleSend;
+namespace BleTools.Full;
 
 public partial class BluetoothService
 {
-	private const int MaxRetryCount = 5;
-
 	private readonly BluetoothOptions _options;
 	private readonly ILogger<BluetoothService> _logger;
 
@@ -30,6 +31,8 @@ public partial class BluetoothService
 
 	public async Task<BluetoothLEDevice> GetBluetoothDeviceAsync(string bluetoothAddress)
 	{
+		//// Fast path
+
 		var nativeAddress = BluetoothAddress.Parse(bluetoothAddress);
 		var device = await BluetoothLEDevice.FromBluetoothAddressAsync(nativeAddress);
 
@@ -39,21 +42,32 @@ public partial class BluetoothService
 			return device;
 		}
 
-		LogBeginDiscovery(bluetoothAddress);
-		var discoveryResult = await DiscoveryAsync(nativeAddress);
-		device = await BluetoothLEDevice.FromIdAsync(discoveryResult.Id);
-		if (device != null)
+		//// Slow path
+
+		LogBeginDeviceDiscovery(bluetoothAddress);
+		try
 		{
-			LogDeviceFound(device.DeviceId, bluetoothAddress);
-			return device;
+			var discoveryResult = await DiscoveryDeviceAsync(nativeAddress);
+			device = await BluetoothLEDevice.FromIdAsync(discoveryResult.Id);
+			if (device == null)
+			{
+				throw new CommandExitedException(WellKnownResultCodes.DeviceNotFound);
+			}
+		}
+		catch (CommandExitedException)
+		{
+			LogDeviceNotFound(bluetoothAddress);
+			throw;
 		}
 
-		throw new CommandExitedException(WellKnownResultCodes.DeviceNotFound);
+		LogDeviceFound(device.DeviceId, bluetoothAddress);
+		return device;
+
 	}
 
-	private async Task<DeviceInformation> DiscoveryAsync(ulong nativeAddress)
+	private async Task<DeviceInformation> DiscoveryDeviceAsync(ulong nativeAddress)
 	{
-		var resultTask = new TaskCompletionSource<DeviceInformation>(TaskCreationOptions.RunContinuationsAsynchronously);
+		var discoveryTaskSource = new TaskCompletionSource<DeviceInformation>(TaskCreationOptions.RunContinuationsAsynchronously);
 
 		string[] requestedProperties =
 		{
@@ -68,21 +82,17 @@ public partial class BluetoothService
 		var deviceWatcher = DeviceInformation.CreateWatcher(
 			BluetoothLEDevice.GetDeviceSelectorFromBluetoothAddress(nativeAddress),
 			requestedProperties,
-			DeviceInformationKind.AssociationEndpoint
-		);
+			DeviceInformationKind.AssociationEndpoint);
 		try
 		{
 			// Register event handlers before starting the watcher.
-			deviceWatcher.Added += (sender, info) => { resultTask.SetResult(info); };
-			deviceWatcher.Updated += (sender, info) =>
-			{
-				// updated must be not null or search won't be performed
-			};
-
+			// Updated callback must be not null or search won't be performed
+			deviceWatcher.Added += (sender, info) => discoveryTaskSource.SetResult(info);
+			deviceWatcher.Updated += (sender, info) => { };
 
 			deviceWatcher.Start();
 
-			return await resultTask.Task.WaitAsync(_options.DiscoveryTimeout);
+			return await discoveryTaskSource.Task.WaitAsync(_options.DeviceDiscoveryTimeout);
 		}
 		catch (OperationCanceledException ex)
 		{
@@ -98,14 +108,31 @@ public partial class BluetoothService
 		}
 	}
 
-	public async Task<GattDeviceService> GetServiceAsync(BluetoothLEDevice device, Guid serviceId)
+	public async Task<GattDeviceService> GetServiceAsync(BluetoothLEDevice device, Guid serviceId, BluetoothCacheMode cacheMode = BluetoothCacheMode.Uncached)
 	{
+		//// Fast path
+
 		GattDeviceService? service = null;
-		int tryCount = 0;
-		while (service == null) //This is to make sure all services are found.
+		try
 		{
-			tryCount++;
-			var candidates = await device.GetGattServicesAsync(BluetoothCacheMode.Uncached);
+			service = device.GetGattService(serviceId);
+		}
+		catch (COMException)
+		{
+		}
+		if (service != null)
+		{
+			LogServiceConnected(serviceId);
+			return service;
+		}
+
+		//// Slow path
+
+		LogBeginServiceDiscovery(serviceId);
+		var sw = Stopwatch.StartNew();
+		while (sw.Elapsed < _options.MetadataRetrieveTimeout)
+		{
+			var candidates = await device.GetGattServicesAsync(cacheMode);
 			if (candidates.Status == GattCommunicationStatus.Success)
 			{
 				foreach (var candidateService in candidates.Services)
@@ -113,7 +140,7 @@ public partial class BluetoothService
 					if (candidateService.Uuid == serviceId)
 					{
 						service = candidateService;
-						LogServiceConnected(serviceId, tryCount);
+						LogServiceConnected(serviceId);
 					}
 					else
 					{
@@ -122,47 +149,50 @@ public partial class BluetoothService
 				}
 			}
 
-			if (service == null)
-			{
-				if (tryCount > MaxRetryCount)
-				{
-					LogServiceConnectionFailed(serviceId);
-					throw new CommandExitedException(WellKnownResultCodes.ServiceNotFound);
-				}
+			if (service == null) await Task.Delay(_options.MetadataPollingInterval);
+		}
 
-				await Task.Delay(TimeSpan.FromMicroseconds(100));
-			}
-
+		if (service == null)
+		{
+			LogServiceConnectionFailed(serviceId);
+			throw new CommandExitedException(WellKnownResultCodes.ServiceNotFound);
 		}
 
 		return service;
 	}
 
-	public async Task<GattCharacteristic> GetCharacteristicAsync(GattDeviceService service,
-		Guid characteristicId)
+	public async Task<GattCharacteristic> GetCharacteristicAsync(GattDeviceService service, Guid characteristicId, BluetoothCacheMode cacheMode = BluetoothCacheMode.Uncached)
 	{
-		GattCharacteristic? characteristic = null;
-		int tryCount = 0;
-		while (characteristic == null) //This is to make sure all characteristics are found.
+		//// Fast path
+
+		GattCharacteristic? characteristic = service.GetCharacteristics(characteristicId).SingleOrDefault();
+		if (characteristic != null)
 		{
-			tryCount++;
-			var characteristics = await service.GetCharacteristicsForUuidAsync(characteristicId, BluetoothCacheMode.Uncached);
-			if (characteristics.Status == GattCommunicationStatus.Success
-				&& characteristics.Characteristics.FirstOrDefault(x => x.Uuid == characteristicId) is { } found)
+			LogCharacteristicFound(characteristicId);
+			return characteristic;
+		}
+
+		//// Slow path
+
+		LogBeginCharacteristicDiscovery(characteristicId);
+		var sw = Stopwatch.StartNew();
+		while (sw.Elapsed < _options.MetadataRetrieveTimeout)
+		{
+			var candidates = await service.GetCharacteristicsForUuidAsync(characteristicId, cacheMode);
+			if (candidates.Status == GattCommunicationStatus.Success
+				&& candidates.Characteristics.FirstOrDefault(x => x.Uuid == characteristicId) is { } found)
 			{
 				characteristic = found;
-				LogCharacteristicFound(characteristicId, tryCount);
+				LogCharacteristicFound(characteristicId);
 			}
-			else
-			{
-				if (tryCount > MaxRetryCount)
-				{
-					Console.WriteLine("Failed to connect to characteristic");
-					throw new InvalidOperationException("Failed to connect to characteristic");
-				}
 
-				await Task.Delay(TimeSpan.FromMicroseconds(100));
-			}
+			if (characteristic == null) await Task.Delay(_options.MetadataPollingInterval);
+		}
+
+		if (characteristic == null)
+		{
+			LogCharacteristicNotFound(characteristicId);
+			throw new CommandExitedException(WellKnownResultCodes.CharacteristicNotFound);
 		}
 
 		return characteristic;
@@ -172,17 +202,26 @@ public partial class BluetoothService
 	private partial void LogDeviceFound(string deviceId, string deviceAddress);
 
 	[LoggerMessage(1, LogLevel.Information, "Device {deviceAddress} not found, begin discovery.")]
-	private partial void LogBeginDiscovery(string deviceAddress);
+	private partial void LogBeginDeviceDiscovery(string deviceAddress);
 
-	[LoggerMessage(2, LogLevel.Information, "Service {serviceId} connected in {attemptCount} tries")]
-	private partial void LogServiceConnected(Guid serviceId, int attemptCount);
+	[LoggerMessage(2, LogLevel.Error, "Cannot connect to device {deviceAddress}.")]
+	private partial void LogDeviceNotFound(string deviceAddress);
 
-	[LoggerMessage(3, LogLevel.Error, "Failed to connect to service {serviceId}")]
+	[LoggerMessage(3, LogLevel.Debug, "Connected to service {serviceId}.")]
+	private partial void LogServiceConnected(Guid serviceId);
+
+	[LoggerMessage(4, LogLevel.Information, "Service {serviceId} not found, begin discovery.")]
+	private partial void LogBeginServiceDiscovery(Guid serviceId);
+
+	[LoggerMessage(5, LogLevel.Error, "Failed to connect to service {serviceId}")]
 	private partial void LogServiceConnectionFailed(Guid serviceId);
 
-	[LoggerMessage(4, LogLevel.Information, "Characteristic {characteristicId} found in {attemptCount} tries")]
-	private partial void LogCharacteristicFound(Guid characteristicId, int attemptCount);
+	[LoggerMessage(6, LogLevel.Debug, "Found characteristic {characteristicId}.")]
+	private partial void LogCharacteristicFound(Guid characteristicId);
 
-	[LoggerMessage(5, LogLevel.Error, "Characteristic {characteristicId} not found.")]
+	[LoggerMessage(7, LogLevel.Information, "Characteristic {characteristicId} not found, begin discovery.")]
+	private partial void LogBeginCharacteristicDiscovery(Guid characteristicId);
+
+	[LoggerMessage(8, LogLevel.Error, "Found characteristic {characteristicId}.")]
 	private partial void LogCharacteristicNotFound(Guid characteristicId);
 }

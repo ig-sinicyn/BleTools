@@ -1,4 +1,4 @@
-﻿using BleSend.Infrastructure;
+﻿using BleTools.Full.Infrastructure;
 
 using Cocona;
 
@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 
-namespace BleSend;
+namespace BleTools.Full;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 internal partial class CharacteristicCommands

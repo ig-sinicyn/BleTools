@@ -1,7 +1,7 @@
 ﻿using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
-namespace BleSend.Infrastructure;
+namespace BleTools.Full.Infrastructure;
 
 internal static class BluetoothAddress
 {

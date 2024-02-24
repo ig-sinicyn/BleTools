@@ -2,7 +2,7 @@
 
 using Windows.Storage.Streams;
 
-namespace BleSend.Infrastructure;
+namespace BleTools.Full.Infrastructure;
 
 public static class CharacteristicValue
 {

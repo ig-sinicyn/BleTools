@@ -1,4 +1,4 @@
-﻿namespace BleSend;
+﻿namespace BleTools.Full;
 
 public static class WellKnownResultCodes
 {
