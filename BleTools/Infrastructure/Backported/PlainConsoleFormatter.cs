@@ -1,8 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
+
+using System.Diagnostics.CodeAnalysis;
 
 namespace BleTools.Infrastructure.Backported;
 
@@ -18,7 +19,7 @@ internal sealed class PlainConsoleFormatter : ConsoleFormatter, IDisposable
 	private readonly IDisposable? _optionsReloadToken;
 
 	public PlainConsoleFormatter(IOptionsMonitor<PlainConsoleFormatterOptions> options)
-		: base(ConsoleFormatterNames.Simple)
+		: base(PlainConsoleFormatterOptions.FormatterName)
 	{
 		ReloadLoggerOptions(options.CurrentValue);
 		_optionsReloadToken = options.OnChange(ReloadLoggerOptions);

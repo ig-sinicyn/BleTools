@@ -1,9 +1,13 @@
-﻿using Windows.Devices.Bluetooth;
-using Windows.Devices.Bluetooth.GenericAttributeProfile;
-using BleTools.Infrastructure;
+﻿using BleTools.Infrastructure;
+
 using Cocona;
+
 using JetBrains.Annotations;
+
 using Microsoft.Extensions.Logging;
+
+using Windows.Devices.Bluetooth;
+using Windows.Devices.Bluetooth.GenericAttributeProfile;
 
 namespace BleTools;
 
@@ -147,6 +151,7 @@ internal partial class CharacteristicCommands
 			throw new CommandExitedException(WellKnownResultCodes.ListServicesFailed);
 		}
 
+		LogServicesFound(device.Name, listResult.Services.Count);
 		foreach (var service in listResult.Services)
 		{
 			try
@@ -196,12 +201,15 @@ internal partial class CharacteristicCommands
 	[LoggerMessage(5, LogLevel.Error, "Failed to list services for {deviceName}: {status} ({protocolError}).")]
 	private partial void LogListServicesFailed(string deviceName, GattCommunicationStatus status, string protocolError);
 
-	[LoggerMessage(6, LogLevel.Information, "* {serviceId}:")]
+	[LoggerMessage(6, LogLevel.Information, "{serviceCount} service(s) found for {deviceName}.")]
+	private partial void LogServicesFound(string deviceName, int serviceCount);
+
+	[LoggerMessage(7, LogLevel.Information, "* {serviceId}:")]
 	private partial void LogServiceItem(Guid serviceId);
 
-	[LoggerMessage(7, LogLevel.Error, "Failed to list characteristics for service {serviceId}: {status} ({protocolError}).")]
+	[LoggerMessage(8, LogLevel.Error, "Failed to list characteristics for service {serviceId}: {status} ({protocolError}).")]
 	private partial void LogListCharacteristicsFailed(Guid serviceId, GattCommunicationStatus status, string protocolError);
 
-	[LoggerMessage(8, LogLevel.Information, "   - {characteristicId}: {properties};")]
+	[LoggerMessage(9, LogLevel.Information, "   - {characteristicId}: {properties};")]
 	private partial void LogCharacteristicItem(Guid characteristicId, GattCharacteristicProperties properties);
 }

@@ -18,6 +18,7 @@ namespace BleTools
 				new("Logging:LogLevel:Microsoft.Extensions.Hosting", nameof(LogLevel.Information))
 			});
 			builder.Logging
+				.ClearProviders()
 				.SetMinimumLevel(LogLevel.Debug)
 				.AddConsole(options => options.FormatterName = PlainConsoleFormatterOptions.FormatterName)
 				.AddConsoleFormatter<PlainConsoleFormatter, PlainConsoleFormatterOptions>();
