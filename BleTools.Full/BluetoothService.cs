@@ -108,22 +108,26 @@ public partial class BluetoothService
 		}
 	}
 
-	public async Task<GattDeviceService> GetServiceAsync(BluetoothLEDevice device, Guid serviceId, BluetoothCacheMode cacheMode = BluetoothCacheMode.Uncached)
+	public async Task<GattDeviceService> GetServiceAsync(BluetoothLEDevice device, Guid serviceId, BluetoothCacheMode cacheMode = BluetoothCacheMode.Cached)
 	{
 		//// Fast path
 
 		GattDeviceService? service = null;
-		try
+		if (cacheMode != BluetoothCacheMode.Uncached)
 		{
-			service = device.GetGattService(serviceId);
-		}
-		catch (COMException)
-		{
-		}
-		if (service != null)
-		{
-			LogServiceConnected(serviceId);
-			return service;
+			try
+			{
+				service = device.GetGattService(serviceId);
+			}
+			catch (COMException)
+			{
+			}
+
+			if (service != null)
+			{
+				LogServiceConnected(serviceId);
+				return service;
+			}
 		}
 
 		//// Slow path
@@ -161,15 +165,19 @@ public partial class BluetoothService
 		return service;
 	}
 
-	public async Task<GattCharacteristic> GetCharacteristicAsync(GattDeviceService service, Guid characteristicId, BluetoothCacheMode cacheMode = BluetoothCacheMode.Uncached)
+	public async Task<GattCharacteristic> GetCharacteristicAsync(GattDeviceService service, Guid characteristicId, BluetoothCacheMode cacheMode = BluetoothCacheMode.Cached)
 	{
 		//// Fast path
 
-		GattCharacteristic? characteristic = service.GetCharacteristics(characteristicId).SingleOrDefault();
-		if (characteristic != null)
+		GattCharacteristic? characteristic = null;
+		if (cacheMode != BluetoothCacheMode.Uncached)
 		{
-			LogCharacteristicFound(characteristicId);
-			return characteristic;
+			characteristic = service.GetCharacteristics(characteristicId).SingleOrDefault();
+			if (characteristic != null)
+			{
+				LogCharacteristicFound(characteristicId);
+				return characteristic;
+			}
 		}
 
 		//// Slow path
