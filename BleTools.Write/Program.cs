@@ -46,7 +46,7 @@ namespace BleTools.Write
 		private static ulong ParseAddress(string address)
 		{
 			if (BitConverter.IsLittleEndian == false)
-				throw new NotImplementedException("Have no support for big-endian.");
+				throw new NotSupportedException("Big-endian environments are not supported.");
 
 			var bytesRaw = PhysicalAddress.Parse(address).GetAddressBytes();
 			if (bytesRaw.Length > sizeof(ulong))
