@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BleSend", "BleSend\BleSend.csproj", "{96D7603F-6C92-4D9E-9C07-458602A2A0A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BleTools.Full", "BleTools.Full\BleTools.Full.csproj", "{96D7603F-6C92-4D9E-9C07-458602A2A0A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BleTools.Write", "BleTools.Write\BleTools.Write.csproj", "{895E330E-892B-4F1C-A97A-1F54FB15FBA2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BleTools.Write", "BleTools.Write\BleTools.Write.csproj", "{895E330E-892B-4F1C-A97A-1F54FB15FBA2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

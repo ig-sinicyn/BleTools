@@ -126,31 +126,31 @@ internal partial class PairCommands
 		LogAcceptPairing(args.DeviceInformation.Name, args.PairingKind);
 	}
 
-	[LoggerMessage(1, LogLevel.Information, "Device {deviceName} already paired")]
+	[LoggerMessage(0, LogLevel.Information, "Device {deviceName} already paired")]
 	private partial void LogAlreadyPaired(string deviceName);
 
-	[LoggerMessage(2, LogLevel.Debug, "Begin pairing {deviceName}")]
+	[LoggerMessage(1, LogLevel.Debug, "Begin pairing {deviceName}")]
 	private partial void LogBeginPairing(string deviceName);
 
-	[LoggerMessage(3, LogLevel.Information, "Please confirm pairing on {deviceName}. Pairing accepted on this device ({pairingKind})")]
+	[LoggerMessage(2, LogLevel.Information, "Please confirm pairing on {deviceName}. Pairing accepted on this device ({pairingKind})")]
 	private partial void LogAcceptPairing(string deviceName, DevicePairingKinds pairingKind);
 
-	[LoggerMessage(4, LogLevel.Error, "Device {deviceName} pairing failed ({pairingStatus}). Result protection level: {protectionLevel}")]
+	[LoggerMessage(3, LogLevel.Error, "Device {deviceName} pairing failed ({pairingStatus}). Result protection level: {protectionLevel}")]
 	private partial void LogPairingFailed(string deviceName, DevicePairingResultStatus pairingStatus, DevicePairingProtectionLevel protectionLevel);
 
-	[LoggerMessage(5, LogLevel.Information, "Device {deviceName} pairing complete. Protection level: {protectionLevel}")]
+	[LoggerMessage(4, LogLevel.Information, "Device {deviceName} pairing complete. Protection level: {protectionLevel}")]
 	private partial void LogPaired(string deviceName, DevicePairingProtectionLevel protectionLevel);
 
-	[LoggerMessage(6, LogLevel.Information, "Device {deviceName} not paired")]
+	[LoggerMessage(5, LogLevel.Information, "Device {deviceName} not paired")]
 	private partial void LogAlreadyUnpaired(string deviceName);
 
-	[LoggerMessage(7, LogLevel.Debug, "Begin unpairing {deviceName}")]
+	[LoggerMessage(6, LogLevel.Debug, "Begin unpairing {deviceName}")]
 	private partial void LogBeginUnpairing(string deviceName);
 
-	[LoggerMessage(8, LogLevel.Error, "Device {deviceName} pairing failed ({pairingStatus})")]
+	[LoggerMessage(7, LogLevel.Error, "Device {deviceName} pairing failed ({pairingStatus})")]
 	private partial void LogUnpairingFailed(string deviceName, DeviceUnpairingResultStatus pairingStatus);
 
-	[LoggerMessage(9, LogLevel.Information, "Device {deviceName} unpair complete")]
+	[LoggerMessage(8, LogLevel.Information, "Device {deviceName} unpair complete")]
 	private partial void LogUnpaired(string deviceName);
 
 }
