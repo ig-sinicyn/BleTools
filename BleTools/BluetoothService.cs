@@ -1,12 +1,20 @@
-﻿using System.Diagnostics;
+﻿using BleTools.Infrastructure;
+using BleTools.Models;
+
+using Cocona;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Channels;
+
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration;
-using BleTools.Infrastructure;
-using Cocona;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+
 using DeviceInformation = Windows.Devices.Enumeration.DeviceInformation;
 
 namespace BleTools;
@@ -33,7 +41,7 @@ public partial class BluetoothService
 
 		if (device != null)
 		{
-			LogDeviceFound(device.DeviceId, bluetoothAddress);
+			LogDeviceFound(device.GetDisplayName());
 			return device;
 		}
 
@@ -55,28 +63,18 @@ public partial class BluetoothService
 			throw;
 		}
 
-		LogDeviceFound(device.DeviceId, bluetoothAddress);
+		LogDeviceFound(device.GetDisplayName());
 		return device;
-
 	}
 
 	private async Task<DeviceInformation> DiscoveryDeviceAsync(ulong nativeAddress)
 	{
-		var discoveryTaskSource = new TaskCompletionSource<DeviceInformation>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-		string[] requestedProperties =
-		{
-			"System.Devices.DevObjectType",
-			"System.Devices.Aep.DeviceAddress",
-			"System.Devices.Aep.IsConnected",
-			"System.Devices.Aep.IsPaired",
-			"System.Devices.Aep.Bluetooth.Le.IsConnectable",
-			"System.Devices.Aep.Bluetooth.IssueInquiry"
-		};
+		var discoveryTaskSource =
+			new TaskCompletionSource<DeviceInformation>(TaskCreationOptions.RunContinuationsAsynchronously);
 
 		var deviceWatcher = DeviceInformation.CreateWatcher(
 			BluetoothLEDevice.GetDeviceSelectorFromBluetoothAddress(nativeAddress),
-			requestedProperties,
+			BluetoothDeviceInformation.DeviceWatcherProperties,
 			DeviceInformationKind.AssociationEndpoint);
 		try
 		{
@@ -103,7 +101,56 @@ public partial class BluetoothService
 		}
 	}
 
-	public async Task<GattDeviceService> GetServiceAsync(BluetoothLEDevice device, Guid serviceId, BluetoothCacheMode cacheMode = BluetoothCacheMode.Cached)
+	public async IAsyncEnumerable<DeviceInformation> ScanBluetoothDevicesAsync(
+		BluetoothDeviceFilter deviceFilter,
+		[EnumeratorCancellation] CancellationToken cancellation)
+	{
+		LogBeginDeviceScan(deviceFilter);
+
+		var channel = Channel.CreateUnbounded<DeviceInformation>();
+
+		var deviceWatcher = DeviceInformation.CreateWatcher(
+			deviceFilter.ToAqsFilter(),
+			BluetoothDeviceInformation.ScanDeviceWatcherProperties,
+			DeviceInformationKind.AssociationEndpoint);
+		try
+		{
+			//// Populate channel part
+
+			// Register event handlers before starting the watcher.
+			// Updated callback must be not null or search won't be performed
+			deviceWatcher.Added += (sender, info) => channel.Writer.TryWrite(info);
+			deviceWatcher.Updated += (sender, info) => { };
+
+			deviceWatcher.Start();
+
+			//// Read channel part
+
+			while (!cancellation.IsCancellationRequested)
+			{
+				DeviceInformation device;
+				try
+				{
+					device = await channel.Reader.ReadAsync(cancellation);
+				}
+				catch (OperationCanceledException)
+				{
+					continue;
+				}
+
+				yield return device;
+			}
+		}
+		finally
+		{
+			channel.Writer.Complete();
+			deviceWatcher.Stop();
+			LogCompleteDeviceScan();
+		}
+	}
+
+	public async Task<GattDeviceService> GetServiceAsync(BluetoothLEDevice device, Guid serviceId,
+		BluetoothCacheMode cacheMode = BluetoothCacheMode.Cached)
 	{
 		//// Fast path
 
@@ -129,7 +176,7 @@ public partial class BluetoothService
 
 		LogBeginServiceDiscovery(serviceId);
 		var sw = Stopwatch.StartNew();
-		while (sw.Elapsed < _options.MetadataRetrieveTimeout)
+		while (service == null && sw.Elapsed < _options.MetadataRetrieveTimeout)
 		{
 			var listResult = await device.GetGattServicesAsync(cacheMode);
 			if (listResult.Status == GattCommunicationStatus.Success)
@@ -160,7 +207,8 @@ public partial class BluetoothService
 		return service;
 	}
 
-	public async Task<GattCharacteristic> GetCharacteristicAsync(GattDeviceService service, Guid characteristicId, BluetoothCacheMode cacheMode = BluetoothCacheMode.Cached)
+	public async Task<GattCharacteristic> GetCharacteristicAsync(GattDeviceService service, Guid characteristicId,
+		BluetoothCacheMode cacheMode = BluetoothCacheMode.Cached)
 	{
 		//// Fast path
 
@@ -179,7 +227,7 @@ public partial class BluetoothService
 
 		LogBeginCharacteristicDiscovery(characteristicId);
 		var sw = Stopwatch.StartNew();
-		while (sw.Elapsed < _options.MetadataRetrieveTimeout)
+		while (characteristic == null && sw.Elapsed < _options.MetadataRetrieveTimeout)
 		{
 			var listResult = await service.GetCharacteristicsForUuidAsync(characteristicId, cacheMode);
 			if (listResult.Status == GattCommunicationStatus.Success
@@ -201,8 +249,8 @@ public partial class BluetoothService
 		return characteristic;
 	}
 
-	[LoggerMessage(0, LogLevel.Debug, "Found device {deviceId} with address = {deviceAddress}.")]
-	private partial void LogDeviceFound(string deviceId, string deviceAddress);
+	[LoggerMessage(0, LogLevel.Debug, "Found device {deviceName}.")]
+	private partial void LogDeviceFound(string deviceName);
 
 	[LoggerMessage(1, LogLevel.Information, "Device {deviceAddress} not found, begin discovery.")]
 	private partial void LogBeginDeviceDiscovery(string deviceAddress);
@@ -227,4 +275,11 @@ public partial class BluetoothService
 
 	[LoggerMessage(8, LogLevel.Error, "Found characteristic {characteristicId}.")]
 	private partial void LogCharacteristicNotFound(Guid characteristicId);
+
+	[LoggerMessage(9, LogLevel.Information,
+		"Begin scanning for bluetooth devices ({deviceFilter}). Press Ctrl-C to stop the scanning.")]
+	private partial void LogBeginDeviceScan(BluetoothDeviceFilter deviceFilter);
+
+	[LoggerMessage(10, LogLevel.Information, "Complete scanning for bluetooth devices.")]
+	private partial void LogCompleteDeviceScan();
 }

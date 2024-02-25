@@ -1,21 +1,32 @@
-﻿using Windows.Devices.Enumeration;
+﻿using BleTools.Infrastructure;
+using BleTools.Models;
+
 using Cocona;
+using Cocona.Application;
+
 using JetBrains.Annotations;
+
 using Microsoft.Extensions.Logging;
+
+using Windows.Devices.Bluetooth;
+using Windows.Devices.Enumeration;
 
 namespace BleTools;
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-internal partial class PairCommands
+internal partial class DeviceCommands
 {
 	private readonly BluetoothService _bluetoothService;
-	private readonly ILogger<PairCommands> _logger;
+	private readonly ICoconaAppContextAccessor _contextAccessor;
+	private readonly ILogger<DeviceCommands> _logger;
 
-	public PairCommands(
+	public DeviceCommands(
 		BluetoothService bluetoothService,
-		ILogger<PairCommands> logger)
+		ICoconaAppContextAccessor contextAccessor,
+		ILogger<DeviceCommands> logger)
 	{
 		_bluetoothService = bluetoothService;
+		_contextAccessor = contextAccessor;
 		_logger = logger;
 	}
 
@@ -36,20 +47,20 @@ internal partial class PairCommands
 			{
 				if (force)
 				{
-					await UnpairCoreAsync(device.DeviceInformation.Pairing, device.Name);
+					await UnpairCoreAsync(device);
 					device.Dispose();
 					device = await _bluetoothService.GetBluetoothDeviceAsync(bluetoothAddress);
 				}
 				else
 				{
-					LogAlreadyPaired(device.Name);
+					LogAlreadyPaired(device.GetDisplayName());
 					return;
 				}
 			}
 
 			//// Trigger pairing
 
-			var deviceName = device.Name;
+			var deviceName = device.GetDisplayName();
 			LogBeginPairing(deviceName);
 
 			var ceremoniesSelected = DevicePairingKinds.ProvidePin
@@ -90,7 +101,7 @@ internal partial class PairCommands
 
 		//// Trigger unpairing
 
-		var deviceName = device.Name;
+		var deviceName = device.GetDisplayName();
 		var pairing = device.DeviceInformation.Pairing;
 		if (pairing.IsPaired == false)
 		{
@@ -98,14 +109,15 @@ internal partial class PairCommands
 			return;
 		}
 
-		await UnpairCoreAsync(pairing, deviceName);
+		await UnpairCoreAsync(device);
 	}
 
-	private async Task UnpairCoreAsync(DeviceInformationPairing pairing, string deviceName)
+	private async Task UnpairCoreAsync(BluetoothLEDevice device)
 	{
+		var deviceName = device.GetDisplayName();
 		LogBeginUnpairing(deviceName);
 
-		var unpairResult = await pairing.UnpairAsync();
+		var unpairResult = await device.DeviceInformation.Pairing.UnpairAsync();
 		if (unpairResult.Status != DeviceUnpairingResultStatus.Unpaired)
 		{
 			LogUnpairingFailed(deviceName, unpairResult.Status);
@@ -118,7 +130,34 @@ internal partial class PairCommands
 	private void PairingRequestedHandler(DeviceInformationCustomPairing sender, DevicePairingRequestedEventArgs args)
 	{
 		args.Accept(args.Pin);
-		LogAcceptPairing(args.DeviceInformation.Name, args.PairingKind);
+		LogAcceptPairing(args.DeviceInformation.GetDisplayName(), args.PairingKind);
+	}
+
+	[Command("scan", Description = "Scans for available bluetooth devices")]
+	public async Task ScanAsync(
+		[Option(
+			"filter",
+			new[] { 'f' },
+			Description = $"Device filter {{ * {nameof(BluetoothDeviceFilter.BluetoothLe) } | {nameof(BluetoothDeviceFilter.BluetoothClassic) } | {nameof(BluetoothDeviceFilter.All) } }}")]
+		BluetoothDeviceFilter deviceFilter = BluetoothDeviceFilter.BluetoothLe)
+	{
+		var cancellation = _contextAccessor.Current!.CancellationToken;
+
+		var observed = new HashSet<string>();
+		await foreach (var device in _bluetoothService.ScanBluetoothDevicesAsync(deviceFilter, cancellation))
+		{
+			if (observed.Add(device.Id))
+			{
+				LogDiscovered(device.GetDisplayName());
+
+				var summary = device.GetScanDeviceDescription();
+				LogDiscoveredSummary(summary);
+			}
+			else
+			{
+				LogRediscovered(device.GetDisplayName());
+			}
+		}
 	}
 
 	[LoggerMessage(0, LogLevel.Information, "Device {deviceName} already paired.")]
@@ -147,5 +186,14 @@ internal partial class PairCommands
 
 	[LoggerMessage(8, LogLevel.Information, "Device {deviceName} unpairing complete.")]
 	private partial void LogUnpaired(string deviceName);
+
+	[LoggerMessage(9, LogLevel.Information, "* Device {deviceName} discovered:")]
+	private partial void LogDiscovered(string deviceName);
+
+	[LoggerMessage(10, LogLevel.Information, "   - {deviceSummary};")]
+	private partial void LogDiscoveredSummary(string deviceSummary);
+
+	[LoggerMessage(11, LogLevel.Information, "* Device {deviceName} discovered (already seen).")]
+	private partial void LogRediscovered(string deviceName);
 
 }

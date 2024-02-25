@@ -28,7 +28,7 @@ namespace BleTools
 			try
 			{
 				using var app = builder.Build();
-				app.AddCommands<PairCommands>();
+				app.AddCommands<DeviceCommands>();
 				app.AddCommands<CharacteristicCommands>();
 				await app.RunAsync();
 			}

@@ -14,17 +14,21 @@ namespace BleTools.Write
 		{
 			if (args.Length != 4)
 			{
-				Console.WriteLine("Requires {address} {service} {characteristic} {value}");
+				Console.WriteLine(@"BleTools.Write {bluetooth-address} {service} {characteristic} {value}
+* bluetooth-address: MAC address of the bluetooth LE device
+* service: UUID of the target GATT service
+* characteristic: UUID of the target GATT service characteristic
+* value: characteristic value to write (passed as UTF-8 string)");
 				return -1;
 			}
 
-			var rawAddress = args[0];
-			var address = ParseAddress(rawAddress);
+			var bluetoothAddress = args[0];
+			var nativeAddress = ParseAddress(bluetoothAddress);
 			var serviceId = Guid.Parse(args[1]);
 			var characteristicId = Guid.Parse(args[2]);
 			var value = args[3];
 
-			using var device = await BluetoothLEDevice.FromBluetoothAddressAsync(address);
+			using var device = await BluetoothLEDevice.FromBluetoothAddressAsync(nativeAddress);
 
 			using var service = device.GetGattService(serviceId);
 			service.Session.MaintainConnection = true;
@@ -35,11 +39,11 @@ namespace BleTools.Write
 
 			if (writeResult != GattCommunicationStatus.Success)
 			{
-				Console.WriteLine($"Write failed: {writeResult}. Service / characteristic {serviceId} / {characteristicId} (device {rawAddress}).");
+				Console.WriteLine($"Write failed: {writeResult}. Service / characteristic {serviceId} / {characteristicId} (device {bluetoothAddress}).");
 				return -1;
 			}
 
-			Console.WriteLine($"Value '{value}' written to service / characteristic {serviceId} / {characteristicId} (device {rawAddress}).");
+			Console.WriteLine($"Value '{value}' written to service / characteristic {serviceId} / {characteristicId} (device {bluetoothAddress}).");
 			return 0;
 		}
 

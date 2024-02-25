@@ -109,7 +109,7 @@ internal partial class CharacteristicCommands
 			var pairing = device.DeviceInformation.Pairing;
 			if (pairing.IsPaired == false)
 			{
-				LogNotPaired(device.Name);
+				LogNotPaired(device.GetDisplayName());
 
 				throw new CommandExitedException(WellKnownResultCodes.DeviceNotPaired);
 			}
@@ -142,16 +142,17 @@ internal partial class CharacteristicCommands
 
 		//// List metadata
 
+		var deviceAddress = BluetoothAddress.Format(device.BluetoothAddress);
 		var cacheMode = uncached ? BluetoothCacheMode.Uncached : BluetoothCacheMode.Cached;
 
 		var listResult = await device.GetGattServicesAsync(cacheMode);
 		if (listResult.Status != GattCommunicationStatus.Success)
 		{
-			LogListServicesFailed(device.Name, listResult.Status, GetGattErrorDescriptor(listResult.ProtocolError));
+			LogListServicesFailed(device.GetDisplayName(), listResult.Status, GetGattErrorDescriptor(listResult.ProtocolError));
 			throw new CommandExitedException(WellKnownResultCodes.ListServicesFailed);
 		}
 
-		LogServicesFound(device.Name, listResult.Services.Count);
+		LogServicesFound(device.GetDisplayName(), listResult.Services.Count);
 		foreach (var service in listResult.Services)
 		{
 			try
