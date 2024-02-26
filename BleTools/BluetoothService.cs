@@ -277,9 +277,9 @@ public partial class BluetoothService
 	private partial void LogCharacteristicNotFound(Guid characteristicId);
 
 	[LoggerMessage(9, LogLevel.Information,
-		"Begin scanning for bluetooth devices ({deviceFilter}). Press Ctrl-C to stop the scanning.")]
+		"Begin scanning for Bluetooth devices (filter set to {deviceFilter}). Press Ctrl-C to stop the scanning.")]
 	private partial void LogBeginDeviceScan(BluetoothDeviceFilter deviceFilter);
 
-	[LoggerMessage(10, LogLevel.Information, "Complete scanning for bluetooth devices.")]
+	[LoggerMessage(10, LogLevel.Information, "End scanning for Bluetooth devices.")]
 	private partial void LogCompleteDeviceScan();
 }

@@ -79,7 +79,6 @@ internal static class BluetoothDeviceInformation
 
 	public static string GetScanDeviceDescription(this DeviceInformation device)
 	{
-
 		const string signalStrengthProperty = "System.Devices.Aep.SignalStrength";
 		const string modelIdProperty = "System.Devices.Aep.ModelId";
 		const string modelNameProperty = "System.Devices.Aep.ModelName";

@@ -25,13 +25,69 @@ internal partial class CharacteristicCommands
 		_logger = logger;
 	}
 
-	[Command("read", Description = "Reads characteristic for specified device")]
+	[Command("list", Description = "Lists GATT services and characteristics")]
+	public async Task ListAsync(
+		[Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress,
+		[Option("require-pairing", new[] { 'p' }, Description = "Require the device to be paired")] bool requirePairing = false,
+		[Option("uncached", new[] { 'u' }, Description = "Ignore OS-level GATT cache")] bool uncached = false)
+	{
+		//// Find device
+
+		using var device = await _bluetoothService.GetBluetoothDeviceAsync(bluetoothAddress);
+
+		//// Check pairing
+
+		AssertPairing(device, requirePairing);
+
+		//// List metadata
+
+		var cacheMode = uncached ? BluetoothCacheMode.Uncached : BluetoothCacheMode.Cached;
+		var listResult = await device.GetGattServicesAsync(cacheMode);
+		if (listResult.Status != GattCommunicationStatus.Success)
+		{
+			LogListServicesFailed(device.GetDisplayName(), listResult.Status, GetGattErrorDescriptor(listResult.ProtocolError));
+			throw new CommandExitedException(WellKnownResultCodes.ListServicesFailed);
+		}
+
+		LogServicesFound(device.GetDisplayName(), listResult.Services.Count);
+		foreach (var service in listResult.Services)
+		{
+			try
+			{
+				LogServiceItem(service.Uuid);
+
+				await ListServiceCharacteristicsAsync(service, cacheMode);
+			}
+			finally
+			{
+				service.Dispose();
+			}
+		}
+
+	}
+
+	private async Task ListServiceCharacteristicsAsync(GattDeviceService service, BluetoothCacheMode cacheMode)
+	{
+		var listResult = await service.GetCharacteristicsAsync(cacheMode);
+		if (listResult.Status != GattCommunicationStatus.Success)
+		{
+			LogListCharacteristicsFailed(service.Uuid, listResult.Status, GetGattErrorDescriptor(listResult.ProtocolError));
+			return;
+		}
+
+		foreach (var characteristic in listResult.Characteristics)
+		{
+			LogCharacteristicItem(characteristic.Uuid, characteristic.CharacteristicProperties);
+		}
+	}
+
+	[Command("read", Description = "Reads GATT service characteristic value as UTF-8 string")]
 	public async Task ReadAsync(
-		[Argument] string bluetoothAddress,
+		[Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress,
 		[Option("service", new[] { 's' }, Description = "GATT service UUID")] Guid serviceId,
 		[Option("characteristic", new[] { 'c' }, Description = "GATT service characteristic UUID")] Guid characteristicId,
 		[Option("require-pairing", new[] { 'p' }, Description = "Require the device to be paired")] bool requirePairing = false,
-		[Option("uncached", new[] { 'u' }, Description = "Ignore cache")] bool uncached = false)
+		[Option("uncached", new[] { 'u' }, Description = "Ignore OS-level GATT cache")] bool uncached = false)
 	{
 		//// Find device
 
@@ -63,14 +119,14 @@ internal partial class CharacteristicCommands
 		LogCharacteristicRead(characteristicId, value);
 	}
 
-	[Command("write", Description = "Reads characteristic for specified device")]
+	[Command("write", Description = "Writes GATT service characteristic")]
 	public async Task WriteAsync(
-		[Argument] string bluetoothAddress,
-		[Argument] string value,
+		[Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress,
+		[Argument(Description = "The new characteristic value (passed as UTF-8 string)")] string value,
 		[Option("service", new[] { 's' }, Description = "GATT service UUID")] Guid serviceId,
 		[Option("characteristic", new[] { 'c' }, Description = "GATT service characteristic UUID")] Guid characteristicId,
 		[Option("require-pairing", new[] { 'p' }, Description = "Require the device to be paired")] bool requirePairing = false,
-		[Option("uncached", new[] { 'u' }, Description = "Ignore cache")] bool uncached = false)
+		[Option("uncached", new[] { 'u' }, Description = "Ignore OS-level GATT cache")] bool uncached = false)
 	{
 		//// Find device
 
@@ -122,66 +178,6 @@ internal partial class CharacteristicCommands
 			? "unknown"
 			: WellKnownGattProtocolErrors.GetErrorDescriptor(protocolError.Value) ?? $"0x{protocolError.Value:X2}";
 		return errorDescriptor;
-	}
-
-
-
-	[Command("list", Description = "Lists services and characteristic for specified device")]
-	public async Task ListAsync(
-		[Argument] string bluetoothAddress,
-		[Option("require-pairing", new[] { 'p' }, Description = "Require the device to be paired")] bool requirePairing = false,
-		[Option("uncached", new[] { 'u' }, Description = "Ignore cache")] bool uncached = false)
-	{
-		//// Find device
-
-		using var device = await _bluetoothService.GetBluetoothDeviceAsync(bluetoothAddress);
-
-		//// Check pairing
-
-		AssertPairing(device, requirePairing);
-
-		//// List metadata
-
-		var deviceAddress = BluetoothAddress.Format(device.BluetoothAddress);
-		var cacheMode = uncached ? BluetoothCacheMode.Uncached : BluetoothCacheMode.Cached;
-
-		var listResult = await device.GetGattServicesAsync(cacheMode);
-		if (listResult.Status != GattCommunicationStatus.Success)
-		{
-			LogListServicesFailed(device.GetDisplayName(), listResult.Status, GetGattErrorDescriptor(listResult.ProtocolError));
-			throw new CommandExitedException(WellKnownResultCodes.ListServicesFailed);
-		}
-
-		LogServicesFound(device.GetDisplayName(), listResult.Services.Count);
-		foreach (var service in listResult.Services)
-		{
-			try
-			{
-				LogServiceItem(service.Uuid);
-
-				await ListServiceCharacteristicsAsync(service, cacheMode);
-			}
-			finally
-			{
-				service.Dispose();
-			}
-		}
-
-	}
-
-	private async Task ListServiceCharacteristicsAsync(GattDeviceService service, BluetoothCacheMode cacheMode)
-	{
-		var listResult = await service.GetCharacteristicsAsync(cacheMode);
-		if (listResult.Status != GattCommunicationStatus.Success)
-		{
-			LogListCharacteristicsFailed(service.Uuid, listResult.Status, GetGattErrorDescriptor(listResult.ProtocolError));
-			return;
-		}
-
-		foreach (var characteristic in listResult.Characteristics)
-		{
-			LogCharacteristicItem(characteristic.Uuid, characteristic.CharacteristicProperties);
-		}
 	}
 
 	[LoggerMessage(0, LogLevel.Error, "Device {deviceName} is not paired. Please call pair command first.")]

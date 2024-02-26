@@ -14,11 +14,15 @@ namespace BleTools.Write
 		{
 			if (args.Length != 4)
 			{
-				Console.WriteLine(@"BleTools.Write {bluetooth-address} {service} {characteristic} {value}
-* bluetooth-address: MAC address of the bluetooth LE device
-* service: UUID of the target GATT service
-* characteristic: UUID of the target GATT service characteristic
-* value: characteristic value to write (passed as UTF-8 string)");
+				Console.WriteLine(@"Usage: BleTools.Write bluetooth-address service characteristic value
+
+Writes GATT service characteristic
+
+Arguments:
+  0: bluetooth-address    MAC address of the Bluetooth LE device (Required)
+  1: service:             GATT service UUID (Required)
+  2: characteristic:      GATT service characteristic UUID (Required)
+  3: value:               The new characteristic value (passed as UTF-8 string) (Required)");
 				return -1;
 			}
 

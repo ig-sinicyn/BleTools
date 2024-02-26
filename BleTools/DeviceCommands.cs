@@ -30,10 +30,40 @@ internal partial class DeviceCommands
 		_logger = logger;
 	}
 
+	[Command("scan", Description = "Scans for available Bluetooth devices")]
+	public async Task ScanAsync(
+		[Option(
+			"filter",
+			new[] { 'f' },
+			Description = "Device filter")]
+		BluetoothDeviceFilter deviceFilter = BluetoothDeviceFilter.BluetoothLe)
+	{
+		var cancellation = _contextAccessor.Current!.CancellationToken;
+
+		var observed = new HashSet<string>();
+		await foreach (var device in _bluetoothService.ScanBluetoothDevicesAsync(deviceFilter, cancellation))
+		{
+			var deviceId = BluetoothDeviceId.FromId(device.Id);
+			var deviceKind = deviceId.IsLowEnergyDevice ? "Bluetooth LE" : "Bluetooth Classic";
+
+			if (observed.Add(device.Id))
+			{
+				LogDiscovered(device.GetDisplayName(), deviceKind);
+
+				var summary = device.GetScanDeviceDescription();
+				LogDiscoveredSummary(summary);
+			}
+			else
+			{
+				LogRediscovered(device.GetDisplayName(), deviceKind);
+			}
+		}
+	}
+
 	[Command("pair", Description = "Starts pairing for specified device (usually requires confirmation on the target device)")]
 	public async Task PairAsync(
-		[Argument] string bluetoothAddress,
-		[Option("force", new[] { 'f' }, Description = "Force pairing")] bool force = false)
+		[Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress,
+		[Option("force", new[] { 'f' }, Description = "Force pairing (unpair if already paired)")] bool force = false)
 	{
 		//// Find device
 
@@ -92,8 +122,8 @@ internal partial class DeviceCommands
 		}
 	}
 
-	[Command("unpair", Description = "Breaks pairing for specified device")]
-	public async Task UnpairAsync([Argument] string bluetoothAddress)
+	[Command("unpair", Description = "Revokes pairing for specified device")]
+	public async Task UnpairAsync([Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress)
 	{
 		//// Find device
 
@@ -133,33 +163,6 @@ internal partial class DeviceCommands
 		LogAcceptPairing(args.DeviceInformation.GetDisplayName(), args.PairingKind);
 	}
 
-	[Command("scan", Description = "Scans for available bluetooth devices")]
-	public async Task ScanAsync(
-		[Option(
-			"filter",
-			new[] { 'f' },
-			Description = $"Device filter {{ * {nameof(BluetoothDeviceFilter.BluetoothLe) } | {nameof(BluetoothDeviceFilter.BluetoothClassic) } | {nameof(BluetoothDeviceFilter.All) } }}")]
-		BluetoothDeviceFilter deviceFilter = BluetoothDeviceFilter.BluetoothLe)
-	{
-		var cancellation = _contextAccessor.Current!.CancellationToken;
-
-		var observed = new HashSet<string>();
-		await foreach (var device in _bluetoothService.ScanBluetoothDevicesAsync(deviceFilter, cancellation))
-		{
-			if (observed.Add(device.Id))
-			{
-				LogDiscovered(device.GetDisplayName());
-
-				var summary = device.GetScanDeviceDescription();
-				LogDiscoveredSummary(summary);
-			}
-			else
-			{
-				LogRediscovered(device.GetDisplayName());
-			}
-		}
-	}
-
 	[LoggerMessage(0, LogLevel.Information, "Device {deviceName} already paired.")]
 	private partial void LogAlreadyPaired(string deviceName);
 
@@ -187,13 +190,13 @@ internal partial class DeviceCommands
 	[LoggerMessage(8, LogLevel.Information, "Device {deviceName} unpairing complete.")]
 	private partial void LogUnpaired(string deviceName);
 
-	[LoggerMessage(9, LogLevel.Information, "* Device {deviceName} discovered:")]
-	private partial void LogDiscovered(string deviceName);
+	[LoggerMessage(9, LogLevel.Information, "* {deviceKind} device {deviceName} discovered:")]
+	private partial void LogDiscovered(string deviceName, string deviceKind);
 
 	[LoggerMessage(10, LogLevel.Information, "   - {deviceSummary};")]
 	private partial void LogDiscoveredSummary(string deviceSummary);
 
-	[LoggerMessage(11, LogLevel.Information, "* Device {deviceName} discovered (already seen).")]
-	private partial void LogRediscovered(string deviceName);
+	[LoggerMessage(11, LogLevel.Information, "* {deviceKind} device {deviceName} discovered (already seen);")]
+	private partial void LogRediscovered(string deviceName, string deviceKind);
 
 }
