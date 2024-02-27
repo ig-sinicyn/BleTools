@@ -20,6 +20,7 @@ Arguments:
   3: value                The new characteristic value (passed as UTF-8 string) (Required)
 
 Options:
+  --debug        Enables debug output
   -h, --help     Show help message
 ```
 
@@ -44,6 +45,7 @@ Scans for available Bluetooth devices
 
 Options:
   -f, --filter <BluetoothDeviceFilter>    Device filter (Default: BluetoothLe) (Allowed values: BluetoothLe, BluetoothClassic, All)
+  --debug                                 Enables debug output
   -h, --help                              Show help message
 ```
 
@@ -78,14 +80,13 @@ Arguments:
 
 Options:
   -f, --force    Force pairing (unpair if already paired)
+  --debug        Enables debug output
   -h, --help     Show help message
 ```
 
 **Example:**
 ```
 PS D:\Projects\BleTools\BleTools\bin\Debug\net8.0-windows10.0.22621.0> .\BleTools.exe pair B8:27:EB:9C:F6:4C
-dbug:  Found device B8:27:EB:9C:F6:4C (Raspberry Pi).
-dbug:  Begin pairing for B8:27:EB:9C:F6:4C (Raspberry Pi).
 info:  Please confirm pairing on Raspberry Pi. Pairing accepted on this device (ConfirmPinMatch).
 info:  Device B8:27:EB:9C:F6:4C (Raspberry Pi) pairing complete. Protection level: None.
 ```
@@ -122,6 +123,7 @@ Arguments:
   0: bluetooth-address    MAC address of the Bluetooth device (Required)
 
 Options:
+  --debug       Enables debug output
   -h, --help    Show help message
 ```
 
@@ -135,8 +137,6 @@ Device has been removed
 **Example:**
 ```
 > .\BleTools.exe unpair B8:27:EB:9C:F6:4C
-dbug:  Found device B8:27:EB:9C:F6:4C (Raspberry Pi).
-dbug:  Begin unpairing B8:27:EB:9C:F6:4C (Raspberry Pi).
 info:  Device B8:27:EB:9C:F6:4C (Raspberry Pi) unpairing complete.
 ```
 
@@ -155,13 +155,13 @@ Arguments:
 Options:
   -p, --require-pairing    Require the device to be paired
   -u, --uncached           Ignore OS-level GATT cache
+  --debug                  Enables debug output
   -h, --help               Show help message
 ```
 
 **Example:**
 ```
 > .\BleTools.exe list B8:27:EB:9C:F6:4C
-dbug:  Found device B8:27:EB:9C:F6:4C (Raspberry Pi).
 info:  4 service(s) found for B8:27:EB:9C:F6:4C (Raspberry Pi).
 info:  * 00001800-0000-1000-8000-00805f9b34fb:
 info:     - 00002a00-0000-1000-8000-00805f9b34fb: Read;
@@ -195,15 +195,13 @@ Options:
   -c, --characteristic <Guid>    GATT service characteristic UUID (Required)
   -p, --require-pairing          Require the device to be paired
   -u, --uncached                 Ignore OS-level GATT cache
+  --debug                        Enables debug output
   -h, --help                     Show help message
 ```
 
 **Example:**
 ```
 .\BleTools.exe read B8:27:EB:9C:F6:4C -s 00000000-6907-4437-8539-9218a9d54e29 -c 00000001-6907-4437-8539-9218a9d54e29
-dbug:  Found device B8:27:EB:9C:F6:4C (Raspberry Pi).
-dbug:  Connected to service 00000000-6907-4437-8539-9218a9d54e29.
-dbug:  Found characteristic 00000001-6907-4437-8539-9218a9d54e29.
 info:  00000001-6907-4437-8539-9218a9d54e29 value is 'Test value'.
 ```
 
@@ -226,15 +224,13 @@ Options:
   -c, --characteristic <Guid>    GATT service characteristic UUID (Required)
   -p, --require-pairing          Require the device to be paired
   -u, --uncached                 Ignore OS-level GATT cache
+  --debug                        Enables debug output
   -h, --help                     Show help message
 ```
 
 **Example:**
 ```
 > .\BleTools.exe write B8:27:EB:9C:F6:4C -s 00000000-6907-4437-8539-9218a9d54e29 -c 00000001-6907-4437-8539-9218a9d54e29 "Test value 2"
-dbug:  Found device B8:27:EB:9C:F6:4C (Raspberry Pi).
-dbug:  Connected to service 00000000-6907-4437-8539-9218a9d54e29.
-dbug:  Found characteristic 00000001-6907-4437-8539-9218a9d54e29.
 info:  00000001-6907-4437-8539-9218a9d54e29 set to 'Test value 2'.
 ```
 

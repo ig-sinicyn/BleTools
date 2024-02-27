@@ -1,6 +1,8 @@
-﻿using BleTools.Infrastructure.Backported;
+﻿using BleTools.Infrastructure;
+using BleTools.Infrastructure.Backported;
 
 using Cocona;
+using Cocona.Command;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +14,9 @@ namespace BleTools
 	{
 		public static async Task Main(string[] args)
 		{
+			var debugFlag = $"--{WellKnownGlobalOptions.DebugFlag.Name}";
+			var debugMode = args.Any(x => x.Equals(debugFlag, StringComparison.OrdinalIgnoreCase));
+
 			var builder = CoconaApp.CreateBuilder(args);
 			builder.Configuration.AddInMemoryCollection(new KeyValuePair<string, string>[]
 			{
@@ -19,11 +24,12 @@ namespace BleTools
 			});
 			builder.Logging
 				.ClearProviders()
-				.SetMinimumLevel(LogLevel.Debug)
+				.SetMinimumLevel(debugMode ? LogLevel.Debug : LogLevel.Information)
 				.AddConsole(options => options.FormatterName = PlainConsoleFormatterOptions.FormatterName)
 				.AddConsoleFormatter<PlainConsoleFormatter, PlainConsoleFormatterOptions>();
 			builder.Services.AddOptions<BluetoothOptions>();
 			builder.Services.AddSingleton<BluetoothService>();
+			builder.Services.Decorate<ICoconaCommandProvider, CustomGlobalOptionsCommandProvider>();
 
 			try
 			{

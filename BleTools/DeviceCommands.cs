@@ -62,7 +62,7 @@ internal partial class DeviceCommands
 
 	[Command("pair", Description = "Starts pairing for specified device (usually requires confirmation on the target device)")]
 	public async Task PairAsync(
-		[Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress,
+		[Argument(Description = "MAC address of the Bluetooth device")] string bluetoothAddress,
 		[Option("force", new[] { 'f' }, Description = "Force pairing (unpair if already paired)")] bool force = false)
 	{
 		//// Find device
@@ -123,7 +123,7 @@ internal partial class DeviceCommands
 	}
 
 	[Command("unpair", Description = "Revokes pairing for specified device")]
-	public async Task UnpairAsync([Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress)
+	public async Task UnpairAsync([Argument(Description = "MAC address of the Bluetooth device")] string bluetoothAddress)
 	{
 		//// Find device
 
