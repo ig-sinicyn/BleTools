@@ -13,7 +13,7 @@ internal static class BluetoothAddress
 
 		var bytesRaw = PhysicalAddress.Parse(address).GetAddressBytes();
 		if (bytesRaw.Length > sizeof(ulong))
-			throw new ArgumentException(nameof(address), $"Invalid address {address}");
+			throw new ArgumentException($"Invalid address {address}", nameof(address));
 		Array.Reverse(bytesRaw);
 
 		Span<byte> target = stackalloc byte[sizeof(ulong)];

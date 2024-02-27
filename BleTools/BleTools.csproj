@@ -5,6 +5,12 @@
 		<TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+
+		<PublishReadyToRunComposite>true</PublishReadyToRunComposite>
+		<PublishSingleFile>true</PublishSingleFile>
+		<SelfContained>True</SelfContained>
+		<PublishTrimmed>True</PublishTrimmed>
+		<TrimMode>partial</TrimMode>
 	</PropertyGroup>
 
 	<ItemGroup>

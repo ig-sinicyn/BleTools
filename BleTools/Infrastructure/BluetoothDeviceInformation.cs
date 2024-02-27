@@ -10,18 +10,18 @@ namespace BleTools.Infrastructure;
 internal static class BluetoothDeviceInformation
 {
 
-	public static readonly IReadOnlyCollection<string> DeviceWatcherProperties = new[]
-	{
+	public static readonly IReadOnlyCollection<string> DeviceWatcherProperties =
+	[
 		"System.Devices.DevObjectType",
 		"System.Devices.Aep.DeviceAddress",
 		"System.Devices.Aep.IsConnected",
 		"System.Devices.Aep.IsPaired",
 		"System.Devices.Aep.Bluetooth.Le.IsConnectable",
 		"System.Devices.Aep.Bluetooth.IssueInquiry"
-	};
+	];
 
-	public static readonly IReadOnlyCollection<string> ScanDeviceWatcherProperties = new[]
-	{
+	public static readonly IReadOnlyCollection<string> ScanDeviceWatcherProperties =
+	[
 		"System.Devices.DevObjectType",
 		"System.Devices.Aep.DeviceAddress",
 		"System.Devices.Aep.IsConnected",
@@ -32,7 +32,7 @@ internal static class BluetoothDeviceInformation
 		"System.Devices.Aep.ModelName",
 		"System.Devices.Aep.Manufacturer",
 		"System.Devices.Aep.SignalStrength"
-	};
+	];
 
 	public static string ToAqsFilter(this BluetoothDeviceFilter deviceFilter) =>
 		deviceFilter switch

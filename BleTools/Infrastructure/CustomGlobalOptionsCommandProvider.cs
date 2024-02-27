@@ -12,12 +12,12 @@ class CustomGlobalOptionsCommandProvider : ICoconaCommandProvider
 		_underlyingCommandProvider = underlyingCommandProvider;
 	}
 
-	public new CommandCollection GetCommandCollection()
+	public CommandCollection GetCommandCollection()
 	{
 		return _cachedCommandCollection ??= GetWrappedCommandCollection(_underlyingCommandProvider.GetCommandCollection());
 	}
 
-	private CommandCollection GetWrappedCommandCollection(CommandCollection commandCollection, int depth = 0)
+	private static CommandCollection GetWrappedCommandCollection(CommandCollection commandCollection, int depth = 0)
 	{
 		var commands = commandCollection.All;
 
@@ -43,7 +43,7 @@ class CustomGlobalOptionsCommandProvider : ICoconaCommandProvider
 			);
 		}
 
-		IReadOnlyList<CommandOptionDescriptor> BuildOptionDescriptor(CommandDescriptor command)
+		static IReadOnlyList<CommandOptionDescriptor> BuildOptionDescriptor(CommandDescriptor command)
 		{
 			var options = command.Options.AsEnumerable();
 

@@ -67,10 +67,10 @@ internal sealed class PlainConsoleFormatter : ConsoleFormatter, IDisposable
 		{
 			textWriter.WriteColoredMessage(logLevelString, logLevelColors.Background, logLevelColors.Foreground);
 		}
-		CreateDefaultLogMessage(textWriter, logEntry, message, scopeProvider);
+		CreateDefaultLogMessage(textWriter, logEntry, message);
 	}
 
-	private void CreateDefaultLogMessage<TState>(TextWriter textWriter, in LogEntry<TState> logEntry, string? message, IExternalScopeProvider? scopeProvider)
+	private static void CreateDefaultLogMessage<TState>(TextWriter textWriter, in LogEntry<TState> logEntry, string? message)
 	{
 		var exception = logEntry.Exception;
 
@@ -151,16 +151,5 @@ internal sealed class PlainConsoleFormatter : ConsoleFormatter, IDisposable
 		};
 	}
 
-	private readonly struct ConsoleColors
-	{
-		public ConsoleColors(ConsoleColor? foreground, ConsoleColor? background)
-		{
-			Foreground = foreground;
-			Background = background;
-		}
-
-		public ConsoleColor? Foreground { get; }
-
-		public ConsoleColor? Background { get; }
-	}
+	private readonly record struct ConsoleColors(ConsoleColor? Foreground, ConsoleColor? Background);
 }

@@ -34,7 +34,7 @@ internal partial class DeviceCommands
 	public async Task ScanAsync(
 		[Option(
 			"filter",
-			new[] { 'f' },
+			['f'],
 			Description = "Device filter")]
 		BluetoothDeviceFilter deviceFilter = BluetoothDeviceFilter.BluetoothLe)
 	{
@@ -63,7 +63,7 @@ internal partial class DeviceCommands
 	[Command("pair", Description = "Starts pairing for specified device (usually requires confirmation on the target device)")]
 	public async Task PairAsync(
 		[Argument(Description = "MAC address of the Bluetooth device")] string bluetoothAddress,
-		[Option("force", new[] { 'f' }, Description = "Force pairing (unpair if already paired)")] bool force = false)
+		[Option("force", ['f'], Description = "Force pairing (unpair if already paired)")] bool force = false)
 	{
 		//// Find device
 

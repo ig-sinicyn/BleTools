@@ -28,8 +28,8 @@ internal partial class CharacteristicCommands
 	[Command("list", Description = "Lists GATT services and characteristics")]
 	public async Task ListAsync(
 		[Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress,
-		[Option("require-pairing", new[] { 'p' }, Description = "Require the device to be paired")] bool requirePairing = false,
-		[Option("uncached", new[] { 'u' }, Description = "Ignore OS-level GATT cache")] bool uncached = false)
+		[Option("require-pairing", ['p'], Description = "Require the device to be paired")] bool requirePairing = false,
+		[Option("uncached", ['u'], Description = "Ignore OS-level GATT cache")] bool uncached = false)
 	{
 		//// Find device
 
@@ -84,10 +84,10 @@ internal partial class CharacteristicCommands
 	[Command("read", Description = "Reads GATT service characteristic value as UTF-8 string")]
 	public async Task ReadAsync(
 		[Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress,
-		[Option("service", new[] { 's' }, Description = "GATT service UUID")] Guid serviceId,
-		[Option("characteristic", new[] { 'c' }, Description = "GATT service characteristic UUID")] Guid characteristicId,
-		[Option("require-pairing", new[] { 'p' }, Description = "Require the device to be paired")] bool requirePairing = false,
-		[Option("uncached", new[] { 'u' }, Description = "Ignore OS-level GATT cache")] bool uncached = false)
+		[Option("service", ['s'], Description = "GATT service UUID")] Guid serviceId,
+		[Option("characteristic", ['c'], Description = "GATT service characteristic UUID")] Guid characteristicId,
+		[Option("require-pairing", ['p'], Description = "Require the device to be paired")] bool requirePairing = false,
+		[Option("uncached", ['u'], Description = "Ignore OS-level GATT cache")] bool uncached = false)
 	{
 		//// Find device
 
@@ -123,10 +123,10 @@ internal partial class CharacteristicCommands
 	public async Task WriteAsync(
 		[Argument(Description = "MAC address of the Bluetooth LE device")] string bluetoothAddress,
 		[Argument(Description = "The new characteristic value (passed as UTF-8 string)")] string value,
-		[Option("service", new[] { 's' }, Description = "GATT service UUID")] Guid serviceId,
-		[Option("characteristic", new[] { 'c' }, Description = "GATT service characteristic UUID")] Guid characteristicId,
-		[Option("require-pairing", new[] { 'p' }, Description = "Require the device to be paired")] bool requirePairing = false,
-		[Option("uncached", new[] { 'u' }, Description = "Ignore OS-level GATT cache")] bool uncached = false)
+		[Option("service", ['s'], Description = "GATT service UUID")] Guid serviceId,
+		[Option("characteristic", ['c'], Description = "GATT service characteristic UUID")] Guid characteristicId,
+		[Option("require-pairing", ['p'], Description = "Require the device to be paired")] bool requirePairing = false,
+		[Option("uncached", ['u'], Description = "Ignore OS-level GATT cache")] bool uncached = false)
 	{
 		//// Find device
 
