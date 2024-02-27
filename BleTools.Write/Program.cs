@@ -20,9 +20,12 @@ Writes GATT service characteristic
 
 Arguments:
   0: bluetooth-address    MAC address of the Bluetooth LE device (Required)
-  1: service:             GATT service UUID (Required)
-  2: characteristic:      GATT service characteristic UUID (Required)
-  3: value:               The new characteristic value (passed as UTF-8 string) (Required)");
+  1: service              GATT service UUID (Required)
+  2: characteristic       GATT service characteristic UUID (Required)
+  3: value                The new characteristic value (passed as UTF-8 string) (Required)
+
+Options:
+  -h, --help     Show help message");
 				return -1;
 			}
 

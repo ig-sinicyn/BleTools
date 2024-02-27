@@ -5,19 +5,22 @@ This repository contains two Windows-only utilities for managing GATT service ch
 # BleTools.Write
 The utility is a single-purpose lightweight tool that allows only writing value into specified GATT service characteristic. Value is written as UTF-8 string; other formats are not supported yet.
 
-The utility is published as a single-file app and is heavily tuned to reduce startup and connection times. The downside is, the writes may fail under some conditions (the target device is sleeping, OS-level GATT cache is out of date and so on). The recommended approach is to use full-functional `BleTools` utility' write command and then switch to the `BleTools.Write` to reduce command execution time
+The utility is published as a single-file app and is heavily tuned to reduce startup and connection times. The downside is, the writes may fail under some conditions (the target device is sleeping, OS-level GATT cache is out of date and so on). The recommended approach is to use full-functional `BleTools write` command and then switch to the `BleTools.Write` to reduce command execution time.
 
 **Usage:**
 ```
-Usage: BleTools.Write {bluetooth-address} {service} {characteristic} {value}
+Usage: BleTools.Write bluetooth-address service characteristic value
 
-Writes value into specified GATT service characteristic
+Writes GATT service characteristic
 
 Arguments:
-* bluetooth-address: MAC address of the Bluetooth LE device
-* service: UUID of the target GATT service
-* characteristic: UUID of the target GATT service characteristic
-* value: characteristic value to write (passed as UTF-8 string)
+  0: bluetooth-address    MAC address of the Bluetooth LE device (Required)
+  1: service              GATT service UUID (Required)
+  2: characteristic       GATT service characteristic UUID (Required)
+  3: value                The new characteristic value (passed as UTF-8 string) (Required)
+
+Options:
+  -h, --help     Show help message
 ```
 
 **Example:**
@@ -62,7 +65,7 @@ PS D:\Projects\BleTools\BleTools\bin\Debug\net8.0-windows10.0.22621.0>
 ```
 
 ## `pair` command
-The commands starts pairing for specified Bluetooth device (usually requires confirmation on the device side). For pairing to linux-based console-only devices be sure to start bluetoothctl before pairing the device. If pairing does not pass, try to set `discoverable on` mode.
+The commands starts pairing for specified Bluetooth device (usually requires confirmation on the device side). For pairing to Linux-based console-only devices be sure to start `bluetoothctl` tool before pairing the device. If the windows device cannot discover Linux one, try to set `bluetoothctl discoverable on`.
 
 **Usage:**
 ```
@@ -71,7 +74,7 @@ Usage: BleTools pair [--force] [--help] bluetooth-address
 Starts pairing for specified device (usually requires confirmation on the target device)
 
 Arguments:
-  0: bluetooth-address    MAC address of the Bluetooth LE device (Required)
+  0: bluetooth-address    MAC address of the Bluetooth device (Required)
 
 Options:
   -f, --force    Force pairing (unpair if already paired)
@@ -116,13 +119,13 @@ Usage: BleTools unpair [--help] bluetooth-address
 Revokes pairing for specified device
 
 Arguments:
-  0: bluetooth-address    MAC address of the Bluetooth LE device (Required)
+  0: bluetooth-address    MAC address of the Bluetooth device (Required)
 
 Options:
   -h, --help    Show help message
 ```
 
- For completely unpairing linux-based devices you may want to explicitly revoke trust /pair status. As example (Raspberry Pi console):
+ For completely unpairing Linux-based devices you may want to explicitly revoke trust /pair status. As example (Raspberry Pi console):
 ```
 [bluetooth]# remove  F8:28:19:B5:B8:3A
 [DEL] Device F8:28:19:B5:B8:3A TestPC
@@ -137,25 +140,104 @@ dbug:  Begin unpairing B8:27:EB:9C:F6:4C (Raspberry Pi).
 info:  Device B8:27:EB:9C:F6:4C (Raspberry Pi) unpairing complete.
 ```
 
-Read:
+## `list` command
+The commands lists GATT services and characteristics for specified Bluetooth device.
+
+**Usage:**
 ```
-dbug:  Found device B8:27:EB:9C:F6:4C (Raspberry Pi).
-info:  Service 00000000-6907-4437-8539-9218a9d54e29 not found, begin discovery.
-dbug:  Connected to service 00000000-6907-4437-8539-9218a9d54e29.
-info:  Characteristic 00000001-6907-4437-8539-9218a9d54e29 not found, begin discovery.
-dbug:  Found characteristic 00000001-6907-4437-8539-9218a9d54e29.
-info:  00000001-6907-4437-8539-9218a9d54e29 value is ''.
+Usage: BleTools list [--require-pairing] [--uncached] [--help] bluetooth-address
+
+Lists GATT services and characteristics
+
+Arguments:
+  0: bluetooth-address    MAC address of the Bluetooth LE device (Required)
+
+Options:
+  -p, --require-pairing    Require the device to be paired
+  -u, --uncached           Ignore OS-level GATT cache
+  -h, --help               Show help message
 ```
 
-Write:
+**Example:**
 ```
+> .\BleTools.exe list B8:27:EB:9C:F6:4C
 dbug:  Found device B8:27:EB:9C:F6:4C (Raspberry Pi).
-info:  Service 00000000-6907-4437-8539-9218a9d54e29 not found, begin discovery.
-dbug:  Connected to service 00000000-6907-4437-8539-9218a9d54e29.
-info:  Characteristic 00000001-6907-4437-8539-9218a9d54e29 not found, begin discovery.
-dbug:  Found characteristic 00000001-6907-4437-8539-9218a9d54e29.
-info:  00000001-6907-4437-8539-9218a9d54e29 set to 'Alt-Tab'
+info:  4 service(s) found for B8:27:EB:9C:F6:4C (Raspberry Pi).
+info:  * 00001800-0000-1000-8000-00805f9b34fb:
+info:     - 00002a00-0000-1000-8000-00805f9b34fb: Read;
+info:     - 00002a01-0000-1000-8000-00805f9b34fb: Read;
+info:     - 00002aa6-0000-1000-8000-00805f9b34fb: Read;
+info:  * 00001801-0000-1000-8000-00805f9b34fb:
+info:     - 00002a05-0000-1000-8000-00805f9b34fb: Indicate;
+info:     - 00002b29-0000-1000-8000-00805f9b34fb: Read, Write;
+info:     - 00002b2a-0000-1000-8000-00805f9b34fb: Read;
+info:     - 00002b3a-0000-1000-8000-00805f9b34fb: Read;
+info:  * 0000180a-0000-1000-8000-00805f9b34fb:
+info:     - 00002a50-0000-1000-8000-00805f9b34fb: Read;
+info:  * 00000000-6907-4437-8539-9218a9d54e29:
+info:     - 00000001-6907-4437-8539-9218a9d54e29: Read, Write;
 ```
+
+## `read` command
+The commands reads GATT service characteristic for specified Bluetooth device. The value is reported as UTF-8 string; other formats are not supported yet.
+
+**Usage:**
+```
+Usage: BleTools read [--service <Guid>] [--characteristic <Guid>] [--require-pairing] [--uncached] [--help] bluetooth-address
+
+Reads GATT service characteristic value as UTF-8 string
+
+Arguments:
+  0: bluetooth-address    MAC address of the Bluetooth LE device (Required)
+
+Options:
+  -s, --service <Guid>           GATT service UUID (Required)
+  -c, --characteristic <Guid>    GATT service characteristic UUID (Required)
+  -p, --require-pairing          Require the device to be paired
+  -u, --uncached                 Ignore OS-level GATT cache
+  -h, --help                     Show help message
+```
+
+**Example:**
+```
+.\BleTools.exe read B8:27:EB:9C:F6:4C -s 00000000-6907-4437-8539-9218a9d54e29 -c 00000001-6907-4437-8539-9218a9d54e29
+dbug:  Found device B8:27:EB:9C:F6:4C (Raspberry Pi).
+dbug:  Connected to service 00000000-6907-4437-8539-9218a9d54e29.
+dbug:  Found characteristic 00000001-6907-4437-8539-9218a9d54e29.
+info:  00000001-6907-4437-8539-9218a9d54e29 value is 'Test value'.
+```
+
+
+## `write` command
+The commands writes GATT service characteristic for specified Bluetooth device. The value is passed as UTF-8 string; other formats are not supported yet.
+
+**Usage:**
+```
+Usage: BleTools write [--service <Guid>] [--characteristic <Guid>] [--require-pairing] [--uncached] [--help] bluetooth-address value
+
+Writes GATT service characteristic
+
+Arguments:
+  0: bluetooth-address    MAC address of the Bluetooth LE device (Required)
+  1: value                The new characteristic value (passed as UTF-8 string) (Required)
+
+Options:
+  -s, --service <Guid>           GATT service UUID (Required)
+  -c, --characteristic <Guid>    GATT service characteristic UUID (Required)
+  -p, --require-pairing          Require the device to be paired
+  -u, --uncached                 Ignore OS-level GATT cache
+  -h, --help                     Show help message
+```
+
+**Example:**
+```
+> .\BleTools.exe write B8:27:EB:9C:F6:4C -s 00000000-6907-4437-8539-9218a9d54e29 -c 00000001-6907-4437-8539-9218a9d54e29 "Test value 2"
+dbug:  Found device B8:27:EB:9C:F6:4C (Raspberry Pi).
+dbug:  Connected to service 00000000-6907-4437-8539-9218a9d54e29.
+dbug:  Found characteristic 00000001-6907-4437-8539-9218a9d54e29.
+info:  00000001-6907-4437-8539-9218a9d54e29 set to 'Test value 2'.
+```
+
 
 
 
