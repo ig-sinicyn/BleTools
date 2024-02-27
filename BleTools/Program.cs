@@ -43,9 +43,9 @@ namespace BleTools
 			}
 			finally
 			{
+				// https://github.com/dotnet/docs/issues/17463
 				GC.Collect();
 				GC.WaitForPendingFinalizers();
-				GC.Collect();
 			}
 		}
 	}

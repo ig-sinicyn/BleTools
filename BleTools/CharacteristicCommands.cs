@@ -189,7 +189,7 @@ internal partial class CharacteristicCommands
 	[LoggerMessage(2, LogLevel.Error, "Failed to read {characteristicId}: {status} ({protocolError}).")]
 	private partial void LogCharacteristicReadFailed(Guid characteristicId, GattCommunicationStatus status, string protocolError);
 
-	[LoggerMessage(3, LogLevel.Information, "{characteristicId} set to '{value}'.")]
+	[LoggerMessage(3, LogLevel.Information, "{characteristicId} value set to '{value}'.")]
 	private partial void LogCharacteristicWritten(Guid characteristicId, string value);
 
 	[LoggerMessage(4, LogLevel.Error, "Failed to write {characteristicId}: {status} ({protocolError}).")]

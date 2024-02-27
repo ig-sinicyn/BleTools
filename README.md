@@ -231,7 +231,7 @@ Options:
 **Example:**
 ```
 > .\BleTools.exe write B8:27:EB:9C:F6:4C -s 00000000-6907-4437-8539-9218a9d54e29 -c 00000001-6907-4437-8539-9218a9d54e29 "Test value 2"
-info:  00000001-6907-4437-8539-9218a9d54e29 set to 'Test value 2'.
+info:  00000001-6907-4437-8539-9218a9d54e29 value set to 'Test value 2'.
 ```
 
 
