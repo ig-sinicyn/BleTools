@@ -5,8 +5,8 @@
       "commandLineArgs": "B8:27:EB:9C:F6:4C 00000000-6907-4437-8539-9218a9d54e29 00000001-6907-4437-8539-9218a9d54e29 Win"
     },
     "BleTools.Write (Win Alt-Tab)": {
-      "commandName": "Project",
-      "commandLineArgs": "B8:27:EB:9C:F6:4C 00000000-6907-4437-8539-9218a9d54e29 00000001-6907-4437-8539-9218a9d54e29 \"Win Alt-Tab\""
+        "commandName": "Project",
+        "commandLineArgs": "B8:27:EB:9C:F6:4C 00000000-6907-4437-8539-9218a9d54e29 00000001-6907-4437-8539-9218a9d54e29 \"Alt-Tab Alt-Tab\""
     }
   }
 }

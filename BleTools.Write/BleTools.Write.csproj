@@ -11,32 +11,6 @@
 		<SelfContained>True</SelfContained>
 		<PublishTrimmed>True</PublishTrimmed>
 		<TrimMode>full</TrimMode>
-
-		<DebuggerSupport>false</DebuggerSupport>
-		<TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
-		<EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
-		<EnableUnsafeBinaryFormatterInDesigntimeLicenseContextSerialization>false</EnableUnsafeBinaryFormatterInDesigntimeLicenseContextSerialization>
-		<EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
-		<!--<EnableCppCLIHostActivation>false</EnableCppCLIHostActivation>-->
-		<VerifyDependencyInjectionOpenGenericServiceTrimmability>false</VerifyDependencyInjectionOpenGenericServiceTrimmability>
-		<EventSourceSupport>false</EventSourceSupport>
-		<MetricsSupport>false</MetricsSupport>
-		<!--<DisableDependencyInjectionDynamicEngine>false</DisableDependencyInjectionDynamicEngine>-->
-		<NullabilityInfoContextSupport>false</NullabilityInfoContextSupport>
-		<!--<DynamicCodeSupport>false</DynamicCodeSupport>-->
-		<!--<EnableGeneratedComInterfaceComImportInterop>false</EnableGeneratedComInterfaceComImportInterop>-->
-		<HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
-		<InvariantGlobalization>true</InvariantGlobalization>
-		<HybridGlobalization>true</HybridGlobalization>
-		<MetadataUpdaterSupport>false</MetadataUpdaterSupport>
-		<StartupHookSupport>false</StartupHookSupport>
-		<AutoreleasePoolSupport>false</AutoreleasePoolSupport>
-		<CustomResourceTypesSupport>false</CustomResourceTypesSupport>
-		<StackTraceSupport>false</StackTraceSupport>
-		<UseNativeHttpHandler>true</UseNativeHttpHandler>
-		<UseSystemResourceKeys>true</UseSystemResourceKeys>
-		<!--<BuiltInComInteropSupport>true</BuiltInComInteropSupport>-->
-
 	</PropertyGroup>
 
 </Project>

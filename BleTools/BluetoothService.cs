@@ -80,8 +80,8 @@ public partial class BluetoothService
 		{
 			// Register event handlers before starting the watcher.
 			// Updated callback must be not null or search won't be performed
-			deviceWatcher.Added += (sender, info) => discoveryTaskSource.SetResult(info);
-			deviceWatcher.Updated += (sender, info) => { };
+			deviceWatcher.Added += (_, info) => discoveryTaskSource.SetResult(info);
+			deviceWatcher.Updated += (_, _) => { };
 
 			deviceWatcher.Start();
 
@@ -119,8 +119,8 @@ public partial class BluetoothService
 
 			// Register event handlers before starting the watcher.
 			// Updated callback must be not null or search won't be performed
-			deviceWatcher.Added += (sender, info) => channel.Writer.TryWrite(info);
-			deviceWatcher.Updated += (sender, info) => { };
+			deviceWatcher.Added += (_, info) => channel.Writer.TryWrite(info);
+			deviceWatcher.Updated += (_, _) => { };
 
 			deviceWatcher.Start();
 

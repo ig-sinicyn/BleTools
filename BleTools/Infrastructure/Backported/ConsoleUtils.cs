@@ -1,6 +1,6 @@
 ﻿namespace BleTools.Infrastructure.Backported;
 
-// BASEd ON: https://github.com/dotnet/runtime/blob/main/src/libraries/Common/src/System/Console/ConsoleUtils.cs
+// BASED ON: https://github.com/dotnet/runtime/blob/main/src/libraries/Common/src/System/Console/ConsoleUtils.cs
 internal static class ConsoleUtils
 {
 	/// <summary>Whether to output ansi color strings.</summary>

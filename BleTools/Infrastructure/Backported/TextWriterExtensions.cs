@@ -5,7 +5,7 @@ internal static class TextWriterExtensions
 {
 	public static void WriteColoredMessage(this TextWriter textWriter, string message, ConsoleColor? background, ConsoleColor? foreground)
 	{
-		// Order: backgroundcolor, foregroundcolor, Message, reset foregroundcolor, reset backgroundcolor
+		// Order: backgroundColor, foregroundColor, Message, reset foregroundColor, reset backgroundColor
 		if (background.HasValue)
 		{
 			textWriter.Write((string?)AnsiParser.GetBackgroundColorEscapeCode(background.Value));

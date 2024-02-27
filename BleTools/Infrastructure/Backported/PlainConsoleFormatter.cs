@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace BleTools.Infrastructure.Backported;
 
+// ReSharper disable All
 // BASED ON: https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Logging.Console/src/SimpleConsoleFormatter.cs
 internal sealed class PlainConsoleFormatter : ConsoleFormatter, IDisposable
 {

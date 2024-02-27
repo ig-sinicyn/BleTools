@@ -2,6 +2,7 @@
 
 namespace BleTools.Infrastructure.Backported;
 
+// ReSharper disable All
 // BASED ON: https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Logging.Console/src/AnsiParser.cs
 internal sealed class AnsiParser
 {
@@ -74,7 +75,7 @@ internal sealed class AnsiParser
 					// Example: \x1B[40m
 					if (IsDigit(span[i + 2]) && IsDigit(span[i + 3]))
 					{
-						escapeCode = (span[i + 2] - '0') * 10 + (span[i + 3] - '0');
+						escapeCode = ((span[i + 2] - '0') * 10) + (span[i + 3] - '0');
 						if (startIndex != -1)
 						{
 							_onParseWrite(message, startIndex, length, background, foreground);

@@ -17,7 +17,7 @@ class CustomGlobalOptionsCommandProvider : ICoconaCommandProvider
 		return _cachedCommandCollection ??= GetWrappedCommandCollection(_underlyingCommandProvider.GetCommandCollection());
 	}
 
-	private static CommandCollection GetWrappedCommandCollection(CommandCollection commandCollection, int depth = 0)
+	private static CommandCollection GetWrappedCommandCollection(CommandCollection commandCollection)
 	{
 		var commands = commandCollection.All;
 
@@ -39,7 +39,7 @@ class CustomGlobalOptionsCommandProvider : ICoconaCommandProvider
 				command.Overloads,
 				command.OptionLikeCommands,
 				command.Flags,
-				command.SubCommands != null && command.SubCommands != commandCollection ? GetWrappedCommandCollection(command.SubCommands, depth + 1) : command.SubCommands
+				command.SubCommands != null && command.SubCommands != commandCollection ? GetWrappedCommandCollection(command.SubCommands) : command.SubCommands
 			);
 		}
 
