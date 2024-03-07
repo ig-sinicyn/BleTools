@@ -36,6 +36,8 @@ Options:
 			var value = args[3];
 
 			using var device = await BluetoothLEDevice.FromBluetoothAddressAsync(nativeAddress);
+			var connectionParameters = BluetoothLEPreferredConnectionParameters.ThroughputOptimized;
+			device.RequestPreferredConnectionParameters(connectionParameters);
 
 			using var service = device.GetGattService(serviceId);
 			service.Session.MaintainConnection = true;

@@ -42,6 +42,7 @@ public partial class BluetoothService
 		if (device != null)
 		{
 			LogDeviceFound(device.GetDisplayName());
+			device.RequestPreferredConnectionParameters(BluetoothLEPreferredConnectionParameters.ThroughputOptimized);
 			return device;
 		}
 
@@ -64,6 +65,7 @@ public partial class BluetoothService
 		}
 
 		LogDeviceFound(device.GetDisplayName());
+		device.RequestPreferredConnectionParameters(BluetoothLEPreferredConnectionParameters.ThroughputOptimized);
 		return device;
 	}
 

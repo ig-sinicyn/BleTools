@@ -6,11 +6,15 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		
-		<PublishReadyToRunComposite>true</PublishReadyToRunComposite>
-		<PublishSingleFile>true</PublishSingleFile>
+		<PublishReadyToRunComposite>True</PublishReadyToRunComposite>
+		<PublishSingleFile>True</PublishSingleFile>
 		<SelfContained>True</SelfContained>
 		<PublishTrimmed>True</PublishTrimmed>
 		<TrimMode>full</TrimMode>
+
+		<DebuggerSupport>False</DebuggerSupport>
+		<TrimmerRemoveSymbols>True</TrimmerRemoveSymbols>
+		<EventSourceSupport>False</EventSourceSupport>
 	</PropertyGroup>
 
 </Project>
